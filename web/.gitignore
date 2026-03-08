@@ -18,7 +18,11 @@
 /out/
 
 # production
-/build
+# /build
+/build/cache/
+/build/standalone/
+/build/trace*
+
 
 # uploaded photos (keep on server, not in git)
 /public/uploads/*

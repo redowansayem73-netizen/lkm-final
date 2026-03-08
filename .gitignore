@@ -2,6 +2,6 @@ node_modules/
 .env
 .vscode/
 dist/
-build/
+# build/
 .DS_Store
 *.log
