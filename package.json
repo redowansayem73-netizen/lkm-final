@@ -1,4 +1,8 @@
 {
+  "scripts": {
+    "build": "npm --prefix web run build",
+    "start": "npm --prefix web run start"
+  },
   "dependencies": {
     "clsx": "^2.1.1",
     "drizzle-orm": "^0.45.1",
