@@ -2,60 +2,90 @@ const http = require('http');
 const fs = require('fs');
 const path = require('path');
 
-console.log('--- Hostinger Deployment Debugger ---');
+console.log('\n--- HOSTINGER NODE.JS DIAGNOSTIC TOOL ---');
+console.log('Timestamp:', new Date().toISOString());
 console.log('Node version:', process.version);
 console.log('Current working directory:', process.cwd());
+console.log('__dirname:', __dirname);
 console.log('Environment PORT:', process.env.PORT);
 console.log('Environment NODE_ENV:', process.env.NODE_ENV);
 
-// Check for critical files
-const filesToCheck = [
+// 1. Check for critical files and directories
+const checkPaths = [
     'package.json',
+    'server.js',
+    'web',
     'web/package.json',
-    'web/server.js',
-    'web/.next/BUILD_ID',
-    'web/.next/standalone/server.js',
-    'web/.next/static/chunks/main.js'
+    'web/build',
+    'web/build/BUILD_ID',
+    'web/server.js' // Checking if old one still exists
 ];
 
-console.log('\n--- Checking Files ---');
-filesToCheck.forEach(file => {
-    const fullPath = path.resolve(file);
+console.log('\n--- 1. File & Directory Check ---');
+checkPaths.forEach(p => {
+    const fullPath = path.resolve(p);
     if (fs.existsSync(fullPath)) {
-        console.log(`[OK] ${file} exists`);
+        const stats = fs.statSync(fullPath);
+        console.log(`[OK] ${p} (${stats.isDirectory() ? 'DIR' : 'FILE'})`);
     } else {
-        console.log(`[MISSING] ${file} NOT found`);
+        console.log(`[MISSING] ${p}`);
     }
 });
 
-// Try to start a dummy server on the provided port
+// 2. Check Dependencies (Can we find Next.js?)
+console.log('\n--- 2. Dependency Resolution Check ---');
+try {
+    const nextPath = require.resolve('next');
+    console.log(`[OK] 'next' resolved at: ${nextPath}`);
+} catch (e) {
+    console.log(`[FAIL] Could not resolve 'next'. Build might have failed or npm install missed it.`);
+}
+
+try {
+    const expressPath = require.resolve('express');
+    console.log(`[OK] 'express' resolved at: ${expressPath}`);
+} catch (e) {
+    console.log(`[FAIL] Could not resolve 'express'.`);
+}
+
+// 3. Check for the custom log file
+console.log('\n--- 3. Application Logs ---');
+const logFilePath = path.join(__dirname, 'web', 'server.log');
+if (fs.existsSync(logFilePath)) {
+    console.log(`[FOUND] web/server.log exists. Last 5 lines:`);
+    const logs = fs.readFileSync(logFilePath, 'utf8').split('\n').filter(Boolean).slice(-5);
+    logs.forEach(line => console.log('  > ' + line));
+} else {
+    console.log(`[NOT FOUND] web/server.log (Server likely hasn't started yet)`);
+}
+
+// 4. Test Port Binding
 const port = parseInt(process.env.PORT, 10) || 3000;
 const hostname = '0.0.0.0';
 
-console.log(`\n--- Testing Port Binding on ${hostname}:${port} ---`);
-
+console.log(`\n--- 4. Port Binding Test (${hostname}:${port}) ---`);
 const server = http.createServer((req, res) => {
     res.writeHead(200, { 'Content-Type': 'text/plain' });
-    res.end('Debug Server is running!\n');
+    res.end('Diagnostic server reached successfully!\n');
 });
 
 server.on('error', (e) => {
-    console.error('[ERROR] Failed to start server:', e.message);
+    console.error(`[CRITICAL] Could not bind to port: ${e.message}`);
     if (e.code === 'EADDRINUSE') {
-        console.log('Reason: Port is already in use.');
-    } else if (e.code === 'EACCES') {
-        console.log('Reason: Permission denied (port < 1024 or restricted).');
+        console.log('Suggestion: Another process is already using this port.');
+    } else {
+        console.log('Check Hostinger dashboard settings.');
     }
     process.exit(1);
 });
 
 server.listen(port, hostname, () => {
-    console.log(`\n[SUCCESS] Server started successfully on port ${port}`);
-    console.log('If you see this and still get 503, the issue might be your Hostinger Setup (Startup file or Proxy)');
+    console.log(`[SUCCESS] Port binding successful.`);
+    console.log('\nDIAGNOSTIC COMPLETE.');
+    console.log('If all steps above are [OK/SUCCESS], the issue is likely the Hostinger Dashboard "Entry file" or "Root directory" mismatch.');
 
-    // Auto-shutdown after 10 seconds to not block
+    // Shutdown after 5 seconds
     setTimeout(() => {
-        console.log('\nDebug complete. Shutting down.');
         process.exit(0);
-    }, 10000);
+    }, 5000);
 });
