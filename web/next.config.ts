@@ -2,11 +2,14 @@ import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
   output: 'standalone',
-  // Fix for Hostinger resource issues: limit parallel workers
+  // Disable Turbopack and limit parallel workers to fix Hostinger crashes
   experimental: {
     workerThreads: false,
-    cpus: 1
-  },
+    cpus: 1,
+    turbo: {
+      enabled: false
+    }
+  } as any,
   images: {
     remotePatterns: [
       {
