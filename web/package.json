@@ -6,7 +6,8 @@
     "dev": "next dev",
     "build": "next build",
     "build:prod": "next build && node scripts/deploy-prepare.js",
-    "start": "next start",
+    "start": "node server.js",
+    "postinstall": "next build",
     "lint": "eslint"
   },
   "dependencies": {
