@@ -1,7 +1,7 @@
 import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
-  output: 'standalone',
+  // output: 'standalone',
   // Disable Turbopack and limit parallel workers to fix Hostinger crashes
   experimental: {
     workerThreads: false,
