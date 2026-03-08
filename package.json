@@ -4,7 +4,7 @@
   "private": true,
   "scripts": {
     "build": "next build web",
-    "start": "node web/server.js",
+    "start": "node server.js",
     "lint": "next lint web"
   },
   "dependencies": {
