@@ -57,7 +57,7 @@ app.prepare().then(() => {
     server.set('trust proxy', 1);
 
     // Handle all requests with Next.js
-    server.all('*', (req, res) => {
+    server.all(/.*/, (req, res) => {
         return handle(req, res);
     });
 
