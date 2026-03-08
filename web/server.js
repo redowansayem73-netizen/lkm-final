@@ -10,7 +10,8 @@ const hostname = 'localhost';
 console.log(`> Starting server in ${process.env.NODE_ENV} mode...`);
 console.log(`> Port: ${port}`);
 
-const app = next({ dev, hostname, port });
+const path = require('path');
+const app = next({ dev, hostname, port, dir: __dirname });
 const handle = app.getRequestHandler();
 
 process.on('unhandledRejection', (reason, promise) => {
