@@ -65,6 +65,11 @@ app.prepare().then(() => {
     // Trust proxy if behind Hostinger's reverse proxy
     server.set('trust proxy', 1);
 
+    // Serve static files from the app's root 'public' directory
+    // This allows manual uploads to Hostinger's default 'public' folder to work
+    server.use(express.static(path.join(__dirname, 'public')));
+    server.use(express.static(path.join(__dirname, 'web', 'public')));
+
     // Handle all requests with Next.js
     server.all(/.*/, (req, res) => {
         return handle(req, res);
