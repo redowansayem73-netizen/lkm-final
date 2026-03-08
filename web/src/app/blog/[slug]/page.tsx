@@ -11,12 +11,13 @@ import Link from 'next/link';
 import { Metadata } from 'next';
 
 interface PageProps {
-    params: { slug: string };
+    params: Promise<{ slug: string }>;
 }
 
 // SEO Metadata
 export async function generateMetadata({ params }: PageProps): Promise<Metadata> {
-    const post = await getPost(params.slug);
+    const { slug } = await params;
+    const post = await getPost(slug);
     if (!post) return { title: 'Post Not Found' };
 
     return {
@@ -86,7 +87,8 @@ async function getRelatedPosts(categoryId: number, currentPostId: number) {
 }
 
 export default async function BlogDetailPage({ params }: PageProps) {
-    const post = await getPost(params.slug);
+    const { slug } = await params;
+    const post = await getPost(slug);
     if (!post) notFound();
 
     const relatedPosts = post.categoryId ? await getRelatedPosts(post.categoryId, post.id) : [];

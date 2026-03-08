@@ -7,11 +7,10 @@ import { brandData } from '@/db/brand-data';
 
 export const dynamic = 'force-dynamic';
 
-export default async function ProductsViewPage({
-    searchParams,
-}: {
-    searchParams: { [key: string]: string | string[] | undefined }
+export default async function ProductsViewPage(props: {
+    searchParams: Promise<{ [key: string]: string | string[] | undefined }>
 }) {
+    const searchParams = await props.searchParams;
     let initialBrands = [];
 
     try {
