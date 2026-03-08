@@ -1,3 +1,4 @@
+require('dotenv').config();
 const express = require('express');
 const next = require('next');
 const path = require('path');
@@ -21,6 +22,8 @@ log(`CWD: ${process.cwd()}`);
 log(`__dirname: ${__dirname}`);
 log(`NODE_ENV: ${process.env.NODE_ENV}`);
 log(`PORT: ${process.env.PORT}`);
+log(`DATABASE_HOST: ${process.env.DATABASE_HOST ? 'Present' : 'MISSING'}`);
+
 
 const port = parseInt(process.env.PORT, 10) || 3000;
 const dev = false;
