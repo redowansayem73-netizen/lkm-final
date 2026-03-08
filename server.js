@@ -17,6 +17,15 @@ function log(msg) {
     console.log(msg);
 }
 
+// Capture all Next.js errors
+const originalError = console.error;
+console.error = function () {
+    const args = Array.from(arguments);
+    const msg = args.map(a => (typeof a === 'object' && a !== null) ? (a.stack || JSON.stringify(a)) : String(a)).join(' ');
+    log('[NEXT.JS ERROR] ' + msg);
+    originalError.apply(console, arguments);
+};
+
 log('--- EXPRESS SERVER STARTUP (ROOT) ---');
 log(`CWD: ${process.cwd()}`);
 log(`__dirname: ${__dirname}`);
