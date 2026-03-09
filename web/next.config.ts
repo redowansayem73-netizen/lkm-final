@@ -2,7 +2,6 @@ import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
   distDir: 'build',
-  output: 'standalone',
   // Disable Turbopack and limit parallel workers to fix Hostinger crashes
   eslint: {
     // Warning: This allows production builds to successfully complete even if
