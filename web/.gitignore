@@ -18,7 +18,7 @@
 /out/
 
 # production
-/build
+# /build
 /build/cache/
 /build/standalone/
 /build/trace*
@@ -30,11 +30,10 @@ fetch_test.js
 build_output.txt
 
 
-# uploaded photos (keep on server, not in git by default)
-# We want to track the products directory now
-/public/uploads/*
-!/public/uploads/products
-!/public/uploads/.gitkeep
+# uploaded photos (we are deploying these via Github now)
+# /public/uploads/*
+# !/public/uploads/products
+# !/public/uploads/.gitkeep
 
 # misc
 .DS_Store
