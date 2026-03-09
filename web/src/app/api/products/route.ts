@@ -169,6 +169,10 @@ export async function GET(request: Request) {
             totalCount,
             totalPages: Math.ceil(totalCount / limit),
             currentPage: page
+        }, {
+            headers: {
+                'Cache-Control': 'public, s-maxage=60, stale-while-revalidate=300'
+            }
         });
     } catch (error) {
         console.error("Failed to fetch products:", error);

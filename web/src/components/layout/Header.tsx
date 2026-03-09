@@ -186,14 +186,19 @@ export default function Header({ className = '' }: { className?: string }) {
                                         <div className="absolute top-full left-0 pt-4 opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-300 transform translate-y-2 group-hover:translate-y-0 w-56 z-50">
                                             <div className="bg-white rounded-xl shadow-2xl border border-gray-100 p-4 text-gray-800 font-normal">
                                                 <ul className="space-y-1 max-h-[60vh] overflow-y-auto pr-2">
-                                                    {shopBrands.length > 0 ? shopBrands.map((brandInfo: any) => (
-                                                        <li key={brandInfo.brand}>
-                                                            <Link href={`/shop?brand=${encodeURIComponent(brandInfo.brand)}`} className="flex justify-between items-center px-3 py-2 rounded-lg hover:bg-gray-50 hover:text-brand-blue hover:translate-x-1 transition-all text-sm">
-                                                                <span className="truncate">{brandInfo.brand}</span>
-                                                                <span className="text-xs bg-gray-100 text-gray-500 py-0.5 px-2 rounded-full font-medium">{brandInfo.count}</span>
-                                                            </Link>
-                                                        </li>
-                                                    )) : (
+                                                    {shopBrands.length > 0 ? shopBrands.map((brandInfo: any, idx: number) => {
+                                                        // Defensively extract brand name regardless of API cache payload structure
+                                                        const bName = (typeof brandInfo.brand === 'object' ? brandInfo.brand.brandName : brandInfo.brand) || brandInfo.name || "Unknown";
+                                                        const bCount = brandInfo.count || brandInfo.productsCount || 0;
+                                                        return (
+                                                            <li key={bName + '-' + idx}>
+                                                                <Link href={`/shop?brand=${encodeURIComponent(bName)}`} className="flex justify-between items-center px-3 py-2 rounded-lg hover:bg-gray-50 hover:text-brand-blue hover:translate-x-1 transition-all text-sm">
+                                                                    <span className="truncate">{bName}</span>
+                                                                    <span className="text-xs bg-gray-100 text-gray-500 py-0.5 px-2 rounded-full font-medium">{bCount}</span>
+                                                                </Link>
+                                                            </li>
+                                                        )
+                                                    }) : (
                                                         <li className="px-3 py-2 text-gray-400 text-sm">Loading brands...</li>
                                                     )}
                                                 </ul>
@@ -367,13 +372,17 @@ export default function Header({ className = '' }: { className?: string }) {
                                     </button>
                                     <div className={`pl-4 bg-gray-50 rounded-b-lg space-y-3 overflow-hidden transition-all duration-300 ${isRepairOpen ? 'max-h-[400px] py-4 overflow-y-auto' : 'max-h-0'}`}>
                                         <ul className="space-y-3">
-                                            {shopBrands.length > 0 ? shopBrands.map((brandInfo: any) => (
-                                                <li key={brandInfo.brand}>
-                                                    <Link href={`/shop?brand=${encodeURIComponent(brandInfo.brand)}`} className="block text-gray-600" onClick={toggleMenu}>
-                                                        <span className="truncate">{brandInfo.brand}</span> <span className="text-xs text-gray-400">({brandInfo.count})</span>
-                                                    </Link>
-                                                </li>
-                                            )) : (
+                                            {shopBrands.length > 0 ? shopBrands.map((brandInfo: any, idx: number) => {
+                                                const bName = (typeof brandInfo.brand === 'object' ? brandInfo.brand.brandName : brandInfo.brand) || brandInfo.name || "Unknown";
+                                                const bCount = brandInfo.count || brandInfo.productsCount || 0;
+                                                return (
+                                                    <li key={bName + '-' + idx}>
+                                                        <Link href={`/shop?brand=${encodeURIComponent(bName)}`} className="block text-gray-600" onClick={toggleMenu}>
+                                                            <span className="truncate">{bName}</span> <span className="text-xs text-gray-400">({bCount})</span>
+                                                        </Link>
+                                                    </li>
+                                                )
+                                            }) : (
                                                 <li className="text-gray-400 text-sm">Loading brands...</li>
                                             )}
                                         </ul>

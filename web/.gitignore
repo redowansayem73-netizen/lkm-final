@@ -18,10 +18,16 @@
 /out/
 
 # production
-# /build
+/build
 /build/cache/
 /build/standalone/
 /build/trace*
+
+# temp
+dev_final.txt
+dev_log*.txt
+fetch_test.js
+build_output.txt
 
 
 # uploaded photos (keep on server, not in git by default)

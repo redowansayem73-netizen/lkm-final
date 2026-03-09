@@ -78,7 +78,6 @@ export default function ShopLandingClient({ initialBrands }: { initialBrands: Br
 
     return (
         <div className="min-h-screen flex flex-col bg-gray-50">
-            <Header />
 
             <main className="flex-1 pt-[104px] w-full">
                 <div className="mb-12">

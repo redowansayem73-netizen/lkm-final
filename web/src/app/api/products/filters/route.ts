@@ -5,6 +5,9 @@ import { eq, and, sql } from 'drizzle-orm';
 
 // Returns available filter options (tags, brands, conditions, price range)
 // for a given category or globally
+
+export const revalidate = 60; // Cache these heavy aggregate queries for 60 seconds
+
 export async function GET(request: Request) {
     try {
         const { searchParams } = new URL(request.url);
@@ -102,6 +105,10 @@ export async function GET(request: Request) {
                 min: Number(priceRange[0]?.minPrice || 0),
                 max: Number(priceRange[0]?.maxPrice || 1000),
             },
+        }, {
+            headers: {
+                'Cache-Control': 'public, s-maxage=60, stale-while-revalidate=300'
+            }
         });
     } catch (error) {
         console.error("Failed to fetch filters:", error);
