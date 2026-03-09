@@ -1,11 +1,11 @@
 "use client";
 
-import { useEffect, useState, useCallback, Suspense } from 'react';
+import { useEffect, useState, useCallback, useRef } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import Header from "@/components/layout/Header";
 import ProductCard from "@/components/shop/ProductCard";
 import ShopSidebar from "@/components/shop/ShopSidebar";
-import { ChevronLeft, ChevronRight, PackageOpen, SlidersHorizontal, X, ChevronDown } from 'lucide-react';
+import { ChevronLeft, ChevronRight, PackageOpen, SlidersHorizontal, X, ChevronDown, Search, Grid3X3, LayoutGrid } from 'lucide-react';
 import clsx from 'clsx';
 import { motion, AnimatePresence } from 'framer-motion';
 
@@ -87,12 +87,38 @@ export default function ProductsClient({ initialBrands, initialCategories }: Sho
     const [sortBy, setSortBy] = useState("default");
     const [sidebarOpen, setSidebarOpen] = useState(false);
 
+    // New filter state
+    const [searchQuery, setSearchQuery] = useState("");
+    const [debouncedSearch, setDebouncedSearch] = useState("");
+    const [activeBrands, setActiveBrands] = useState<string[]>(initialBrand ? [initialBrand] : []);
+    const [activeConditions, setActiveConditions] = useState<string[]>([]);
+    const [activeTags, setActiveTags] = useState<string[]>([]);
+    const [priceRange, setPriceRange] = useState<[number, number]>([0, Infinity]);
+    const [gridCols, setGridCols] = useState<3 | 4>(4);
+
+    const searchTimerRef = useRef<NodeJS.Timeout | null>(null);
+
+    // Debounce search input
+    useEffect(() => {
+        if (searchTimerRef.current) clearTimeout(searchTimerRef.current);
+        searchTimerRef.current = setTimeout(() => {
+            setDebouncedSearch(searchQuery);
+            setCurrentPage(1);
+        }, 400);
+        return () => {
+            if (searchTimerRef.current) clearTimeout(searchTimerRef.current);
+        };
+    }, [searchQuery]);
+
     // Sync state with URL params when they change externally
     useEffect(() => {
         const cat = searchParams.get('category');
         const brnd = searchParams.get('brand');
         if (cat !== activeCategory) setActiveCategory(cat);
-        if (brnd !== activeBrandSlug) setActiveBrandSlug(brnd || "");
+        if (brnd && brnd !== activeBrandSlug) {
+            setActiveBrandSlug(brnd);
+            setActiveBrands([brnd]);
+        }
     }, [searchParams]);
 
     const fetchProducts = useCallback(async () => {
@@ -100,7 +126,13 @@ export default function ProductsClient({ initialBrands, initialCategories }: Sho
         try {
             let url = `/api/products?page=${currentPage}&limit=${PRODUCTS_PER_PAGE}`;
             if (activeCategory) url += `&category=${activeCategory}`;
-            if (activeBrandSlug) url += `&brand=${activeBrandSlug}`;
+            if (activeBrands.length > 0) url += `&brand=${activeBrands[0]}`;
+            if (debouncedSearch) url += `&search=${encodeURIComponent(debouncedSearch)}`;
+            if (activeConditions.length > 0) url += `&condition=${activeConditions.join(',')}`;
+            if (activeTags.length > 0) url += `&tags=${activeTags.join(',')}`;
+            if (priceRange[0] > 0) url += `&minPrice=${priceRange[0]}`;
+            if (priceRange[1] < Infinity) url += `&maxPrice=${priceRange[1]}`;
+
             const res = await fetch(url);
             if (res.ok) {
                 const data = await res.json();
@@ -118,7 +150,7 @@ export default function ProductsClient({ initialBrands, initialCategories }: Sho
         } finally {
             setLoading(false);
         }
-    }, [currentPage, activeCategory, activeBrandSlug, sortBy]);
+    }, [currentPage, activeCategory, activeBrands, sortBy, debouncedSearch, activeConditions, activeTags, priceRange]);
 
     useEffect(() => { fetchProducts(); }, [fetchProducts]);
 
@@ -147,16 +179,16 @@ export default function ProductsClient({ initialBrands, initialCategories }: Sho
 
     const handleCategoryChange = (slug: string | null) => {
         setActiveCategory(slug);
-        setActiveBrandSlug("");
+        setActiveTags([]); // Reset tags when category changes since they're category-specific
         setCurrentPage(1);
-        updateUrlParams(slug, "");
+        updateUrlParams(slug, activeBrands.length > 0 ? activeBrands[0] : "");
     };
 
-    const handleBrandChange = (slug: string) => {
-        setActiveBrandSlug(slug);
-        setActiveCategory(null);
+    const handleBrandChange = (brands: string[]) => {
+        setActiveBrands(brands);
+        setActiveBrandSlug(brands[0] || "");
         setCurrentPage(1);
-        updateUrlParams(null, slug);
+        updateUrlParams(activeCategory, brands[0] || "");
     };
 
     const handlePageChange = (page: number) => {
@@ -167,8 +199,73 @@ export default function ProductsClient({ initialBrands, initialCategories }: Sho
         }
     };
 
+    const hasActiveFilters = !!(
+        activeCategory ||
+        activeBrands.length > 0 ||
+        activeConditions.length > 0 ||
+        activeTags.length > 0 ||
+        debouncedSearch ||
+        priceRange[0] > 0 ||
+        priceRange[1] < Infinity
+    );
+
+    const clearAllFilters = () => {
+        setActiveCategory(null);
+        setActiveBrands([]);
+        setActiveBrandSlug("");
+        setActiveConditions([]);
+        setActiveTags([]);
+        setSearchQuery("");
+        setDebouncedSearch("");
+        setPriceRange([0, Infinity]);
+        setCurrentPage(1);
+        router.push('/products', { scroll: false });
+    };
+
     const startItem = totalCount > 0 ? (currentPage - 1) * PRODUCTS_PER_PAGE + 1 : 0;
     const endItem = Math.min(currentPage * PRODUCTS_PER_PAGE, totalCount);
+
+    // Collect all active filter labels for displaying chips
+    const activeFilterChips: { label: string; onRemove: () => void }[] = [];
+    if (activeCategory && activeCategoryName) {
+        activeFilterChips.push({
+            label: `Category: ${activeCategoryName}`,
+            onRemove: () => handleCategoryChange(null),
+        });
+    }
+    activeBrands.forEach(brand => {
+        activeFilterChips.push({
+            label: `Brand: ${brand}`,
+            onRemove: () => handleBrandChange(activeBrands.filter(b => b !== brand)),
+        });
+    });
+    activeConditions.forEach(cond => {
+        activeFilterChips.push({
+            label: `Condition: ${cond}`,
+            onRemove: () => setActiveConditions(activeConditions.filter(c => c !== cond)),
+        });
+    });
+    activeTags.forEach(tag => {
+        activeFilterChips.push({
+            label: tag,
+            onRemove: () => setActiveTags(activeTags.filter(t => t !== tag)),
+        });
+    });
+    if (priceRange[0] > 0 || priceRange[1] < Infinity) {
+        const label = priceRange[1] < Infinity
+            ? `$${priceRange[0]} – $${priceRange[1]}`
+            : `From $${priceRange[0]}`;
+        activeFilterChips.push({
+            label: `Price: ${label}`,
+            onRemove: () => setPriceRange([0, Infinity]),
+        });
+    }
+    if (debouncedSearch) {
+        activeFilterChips.push({
+            label: `Search: "${debouncedSearch}"`,
+            onRemove: () => { setSearchQuery(""); setDebouncedSearch(""); },
+        });
+    }
 
     return (
         <div className="min-h-screen flex flex-col bg-gray-50">
@@ -201,6 +298,16 @@ export default function ProductsClient({ initialBrands, initialCategories }: Sho
                                     onCategoryChange={handleCategoryChange}
                                     onClose={() => setSidebarOpen(false)}
                                     isMobile={true}
+                                    activeBrandSlugs={activeBrands}
+                                    onBrandChange={handleBrandChange}
+                                    activeConditions={activeConditions}
+                                    onConditionChange={setActiveConditions}
+                                    activeTags={activeTags}
+                                    onTagChange={setActiveTags}
+                                    priceRange={priceRange}
+                                    onPriceRangeChange={setPriceRange}
+                                    onClearAllFilters={clearAllFilters}
+                                    hasActiveFilters={hasActiveFilters}
                                 />
                             </div>
                         </motion.aside>
@@ -237,12 +344,78 @@ export default function ProductsClient({ initialBrands, initialCategories }: Sho
                                     categories={initialCategories}
                                     activeCategory={activeCategory}
                                     onCategoryChange={handleCategoryChange}
+                                    activeBrandSlugs={activeBrands}
+                                    onBrandChange={handleBrandChange}
+                                    activeConditions={activeConditions}
+                                    onConditionChange={setActiveConditions}
+                                    activeTags={activeTags}
+                                    onTagChange={setActiveTags}
+                                    priceRange={priceRange}
+                                    onPriceRangeChange={setPriceRange}
+                                    onClearAllFilters={clearAllFilters}
+                                    hasActiveFilters={hasActiveFilters}
                                 />
                             </div>
                         </aside>
 
                         {/* Main Content */}
                         <div className="flex-1 min-w-0">
+                            {/* Search Bar */}
+                            <div className="mb-4">
+                                <div className="relative">
+                                    <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400 pointer-events-none" />
+                                    <input
+                                        type="text"
+                                        placeholder="Search products by name, brand, or SKU..."
+                                        value={searchQuery}
+                                        onChange={(e) => setSearchQuery(e.target.value)}
+                                        className="w-full h-12 pl-12 pr-12 bg-white border border-gray-200 rounded-2xl text-sm outline-none focus:border-brand-blue focus:ring-2 focus:ring-blue-100 transition-all shadow-sm placeholder:text-gray-400"
+                                    />
+                                    {searchQuery && (
+                                        <button
+                                            onClick={() => { setSearchQuery(""); setDebouncedSearch(""); }}
+                                            className="absolute right-4 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600 transition-colors"
+                                        >
+                                            <X className="w-4 h-4" />
+                                        </button>
+                                    )}
+                                </div>
+                            </div>
+
+                            {/* Active Filter Chips */}
+                            <AnimatePresence>
+                                {activeFilterChips.length > 0 && (
+                                    <motion.div
+                                        initial={{ opacity: 0, height: 0 }}
+                                        animate={{ opacity: 1, height: 'auto' }}
+                                        exit={{ opacity: 0, height: 0 }}
+                                        className="mb-4 overflow-hidden"
+                                    >
+                                        <div className="flex flex-wrap gap-2 items-center">
+                                            {activeFilterChips.map((chip, i) => (
+                                                <motion.button
+                                                    key={`${chip.label}-${i}`}
+                                                    initial={{ opacity: 0, scale: 0.9 }}
+                                                    animate={{ opacity: 1, scale: 1 }}
+                                                    exit={{ opacity: 0, scale: 0.9 }}
+                                                    onClick={chip.onRemove}
+                                                    className="flex items-center gap-1.5 h-8 px-3 bg-blue-50 text-brand-blue rounded-lg text-xs font-semibold border border-blue-200 hover:bg-blue-100 transition-all"
+                                                >
+                                                    {chip.label}
+                                                    <X className="w-3 h-3" />
+                                                </motion.button>
+                                            ))}
+                                            <button
+                                                onClick={clearAllFilters}
+                                                className="h-8 px-3 text-xs font-bold text-red-500 hover:text-red-600 hover:bg-red-50 rounded-lg transition-all"
+                                            >
+                                                Clear all
+                                            </button>
+                                        </div>
+                                    </motion.div>
+                                )}
+                            </AnimatePresence>
+
                             {/* Toolbar */}
                             <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-6">
                                 <div className="flex items-center gap-3">
@@ -252,56 +425,55 @@ export default function ProductsClient({ initialBrands, initialCategories }: Sho
                                         className="lg:hidden flex items-center gap-2 h-10 px-4 bg-white border border-gray-200 rounded-xl text-sm font-semibold text-gray-700 hover:border-brand-blue hover:text-brand-blue transition-all shadow-sm"
                                     >
                                         <SlidersHorizontal className="w-4 h-4" />
-                                        Filter
-                                        {activeCategory && <span className="w-2 h-2 bg-brand-blue rounded-full" />}
+                                        Filters
+                                        {hasActiveFilters && <span className="w-2 h-2 bg-brand-blue rounded-full" />}
                                     </button>
-
-                                    {/* Active category pill */}
-                                    <AnimatePresence>
-                                        {activeCategory && (
-                                            <motion.button
-                                                initial={{ opacity: 0, scale: 0.9 }}
-                                                animate={{ opacity: 1, scale: 1 }}
-                                                exit={{ opacity: 0, scale: 0.9 }}
-                                                onClick={() => handleCategoryChange(null)}
-                                                className="flex items-center gap-1.5 h-10 px-4 bg-blue-50 text-brand-blue rounded-xl text-sm font-semibold border border-blue-200 hover:bg-blue-100 transition-all"
-                                            >
-                                                {activeCategoryName}
-                                                <X className="w-3.5 h-3.5" />
-                                            </motion.button>
-                                        )}
-                                        {activeBrandSlug && (
-                                            <motion.button
-                                                initial={{ opacity: 0, scale: 0.9 }}
-                                                animate={{ opacity: 1, scale: 1 }}
-                                                exit={{ opacity: 0, scale: 0.9 }}
-                                                onClick={() => handleBrandChange("")}
-                                                className="flex items-center gap-1.5 h-10 px-4 bg-yellow-50 text-brand-yellow rounded-xl text-sm font-semibold border border-yellow-200 hover:bg-yellow-100 transition-all"
-                                            >
-                                                Brand: {activeBrandSlug.replace('-', ' ')}
-                                                <X className="w-3.5 h-3.5" />
-                                            </motion.button>
-                                        )}
-                                    </AnimatePresence>
 
                                     <span className="text-sm text-gray-500 hidden sm:block">
                                         {loading ? "Loading..." : `${totalCount} product${totalCount !== 1 ? 's' : ''}`}
+                                        {totalCount > 0 && !loading && ` · ${startItem}–${endItem}`}
                                     </span>
                                 </div>
 
-                                {/* Sort */}
-                                <div className="relative flex-shrink-0">
-                                    <select
-                                        value={sortBy}
-                                        onChange={(e) => { setSortBy(e.target.value); setCurrentPage(1); }}
-                                        className="h-10 pl-3 pr-8 bg-white border border-gray-200 rounded-xl text-sm font-medium text-gray-700 outline-none hover:border-brand-blue focus:border-brand-blue focus:ring-2 focus:ring-blue-50 transition-all appearance-none cursor-pointer shadow-sm"
-                                    >
-                                        <option value="default">Sort: Default</option>
-                                        <option value="price-asc">Price: Low to High</option>
-                                        <option value="price-desc">Price: High to Low</option>
-                                        <option value="name">Name: A–Z</option>
-                                    </select>
-                                    <ChevronDown className="absolute right-2.5 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400 pointer-events-none" />
+                                <div className="flex items-center gap-2">
+                                    {/* Grid toggle */}
+                                    <div className="hidden md:flex items-center bg-white border border-gray-200 rounded-xl overflow-hidden shadow-sm">
+                                        <button
+                                            onClick={() => setGridCols(3)}
+                                            className={clsx(
+                                                "p-2 transition-all",
+                                                gridCols === 3 ? "bg-brand-blue text-white" : "text-gray-400 hover:text-gray-600"
+                                            )}
+                                            title="3 columns"
+                                        >
+                                            <LayoutGrid className="w-4 h-4" />
+                                        </button>
+                                        <button
+                                            onClick={() => setGridCols(4)}
+                                            className={clsx(
+                                                "p-2 transition-all",
+                                                gridCols === 4 ? "bg-brand-blue text-white" : "text-gray-400 hover:text-gray-600"
+                                            )}
+                                            title="4 columns"
+                                        >
+                                            <Grid3X3 className="w-4 h-4" />
+                                        </button>
+                                    </div>
+
+                                    {/* Sort */}
+                                    <div className="relative flex-shrink-0">
+                                        <select
+                                            value={sortBy}
+                                            onChange={(e) => { setSortBy(e.target.value); setCurrentPage(1); }}
+                                            className="h-10 pl-3 pr-8 bg-white border border-gray-200 rounded-xl text-sm font-medium text-gray-700 outline-none hover:border-brand-blue focus:border-brand-blue focus:ring-2 focus:ring-blue-50 transition-all appearance-none cursor-pointer shadow-sm"
+                                        >
+                                            <option value="default">Sort: Default</option>
+                                            <option value="price-asc">Price: Low to High</option>
+                                            <option value="price-desc">Price: High to Low</option>
+                                            <option value="name">Name: A–Z</option>
+                                        </select>
+                                        <ChevronDown className="absolute right-2.5 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400 pointer-events-none" />
+                                    </div>
                                 </div>
                             </div>
 
@@ -320,17 +492,27 @@ export default function ProductsClient({ initialBrands, initialCategories }: Sho
                                             initial={{ opacity: 0 }}
                                             animate={{ opacity: 1 }}
                                             exit={{ opacity: 0 }}
-                                            className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-3 xl:grid-cols-4 gap-3 md:gap-4"
+                                            className={clsx(
+                                                "grid gap-3 md:gap-4",
+                                                gridCols === 3
+                                                    ? "grid-cols-2 sm:grid-cols-2 lg:grid-cols-3"
+                                                    : "grid-cols-2 sm:grid-cols-3 lg:grid-cols-3 xl:grid-cols-4"
+                                            )}
                                         >
                                             {Array(8).fill(0).map((_, i) => <SkeletonCard key={i} />)}
                                         </motion.div>
                                     ) : products.length > 0 ? (
                                         <motion.div
-                                            key={`grid-${currentPage}-${activeCategory}`}
+                                            key={`grid-${currentPage}-${activeCategory}-${gridCols}`}
                                             initial={{ opacity: 0, y: 12 }}
                                             animate={{ opacity: 1, y: 0 }}
                                             transition={{ duration: 0.3 }}
-                                            className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-3 xl:grid-cols-4 gap-3 md:gap-4"
+                                            className={clsx(
+                                                "grid gap-3 md:gap-4",
+                                                gridCols === 3
+                                                    ? "grid-cols-2 sm:grid-cols-2 lg:grid-cols-3"
+                                                    : "grid-cols-2 sm:grid-cols-3 lg:grid-cols-3 xl:grid-cols-4"
+                                            )}
                                         >
                                             {products.map((product, idx) => (
                                                 <motion.div
@@ -362,16 +544,16 @@ export default function ProductsClient({ initialBrands, initialCategories }: Sho
                                             <PackageOpen className="w-14 h-14 text-gray-200 mb-4" strokeWidth={1.5} />
                                             <h3 className="text-lg font-bold text-gray-900 mb-1">No products found</h3>
                                             <p className="text-gray-500 text-sm max-w-xs">
-                                                {activeCategory
-                                                    ? "Try a different category or clear the filter."
+                                                {hasActiveFilters
+                                                    ? "Try adjusting your filters or search term."
                                                     : "No products are available right now. Check back later!"}
                                             </p>
-                                            {activeCategory && (
+                                            {hasActiveFilters && (
                                                 <button
-                                                    onClick={() => handleCategoryChange(null)}
+                                                    onClick={clearAllFilters}
                                                     className="mt-5 px-5 py-2 bg-brand-blue text-white rounded-xl text-sm font-bold hover:bg-blue-700 transition-colors"
                                                 >
-                                                    Clear Filter
+                                                    Clear All Filters
                                                 </button>
                                             )}
                                         </motion.div>

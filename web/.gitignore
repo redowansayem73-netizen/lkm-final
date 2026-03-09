@@ -24,8 +24,10 @@
 /build/trace*
 
 
-# uploaded photos (keep on server, not in git)
+# uploaded photos (keep on server, not in git by default)
+# We want to track the products directory now
 /public/uploads/*
+!/public/uploads/products
 !/public/uploads/.gitkeep
 
 # misc

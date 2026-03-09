@@ -1,113 +1,144 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { ChevronLeft, ChevronRight } from "lucide-react";
+import { Search } from "lucide-react";
+import { useRouter } from "next/navigation";
+import Link from "next/link";
 
-const slides = [
-    {
-        id: 1,
-        image: "https://images.unsplash.com/photo-1616348436168-de43ad0db179?q=80&w=2000&auto=format&fit=crop",
-        title: "Latest iPhone 15 Pro",
-        subtitle: "Experience the Titanium Strength",
-        cta: "Shop Now",
-        link: "/products?category=iphone",
-        color: "bg-[#1c1c1c]"
-    },
-    {
-        id: 2,
-        image: "https://images.unsplash.com/photo-1610945265064-0e34e5519bbf?q=80&w=2000&auto=format&fit=crop",
-        title: "Samsung Galaxy S24 Ultra",
-        subtitle: "The Power of Galaxy AI",
-        cta: "Explore More",
-        link: "/products?brand=samsung",
-        color: "bg-[#0b1424]"
-    },
-    {
-        id: 3,
-        image: "https://images.unsplash.com/photo-1556656793-062ff9878286?q=80&w=2000&auto=format&fit=crop",
-        title: "Premium Accessories",
-        subtitle: "Protect Your Style",
-        cta: "View All",
-        link: "/products?category=accessories",
-        color: "bg-brand-blue"
-    }
-];
+
 
 export default function StoreHero() {
-    const [current, setCurrent] = useState(0);
+    const [searchQuery, setSearchQuery] = useState("");
+    const [searchResults, setSearchResults] = useState<any[]>([]);
+    const [isSearching, setIsSearching] = useState(false);
+    const [isSearchFocused, setIsSearchFocused] = useState(false);
+    const router = useRouter();
 
     useEffect(() => {
-        const timer = setInterval(() => {
-            setCurrent((prev) => (prev + 1) % slides.length);
-        }, 5000);
-        return () => clearInterval(timer);
-    }, []);
+        const fetchSearchResults = async () => {
+            if (!searchQuery.trim()) {
+                setSearchResults([]);
+                return;
+            }
+            setIsSearching(true);
+            try {
+                const res = await fetch(`/api/products?search=${encodeURIComponent(searchQuery.trim())}&limit=5`);
+                if (res.ok) {
+                    const data = await res.json();
+                    setSearchResults(data.products || []);
+                }
+            } catch (error) {
+                console.error("Search error:", error);
+            } finally {
+                setIsSearching(false);
+            }
+        };
 
-    const next = () => setCurrent((prev) => (prev + 1) % slides.length);
-    const prev = () => setCurrent((prev) => (prev - 1 + slides.length) % slides.length);
+        const timeoutId = setTimeout(fetchSearchResults, 300);
+        return () => clearTimeout(timeoutId);
+    }, [searchQuery]);
+
+    const handleSearch = (e?: React.FormEvent) => {
+        if (e) e.preventDefault();
+        if (searchQuery.trim()) {
+            setIsSearchFocused(false);
+            router.push(`/products?search=${encodeURIComponent(searchQuery.trim())}`);
+        }
+    };
 
     return (
-        <section className="relative h-[400px] md:h-[600px] overflow-hidden">
-            <AnimatePresence mode="wait">
-                <motion.div
-                    key={current}
-                    initial={{ opacity: 0 }}
-                    animate={{ opacity: 1 }}
-                    exit={{ opacity: 0 }}
-                    transition={{ duration: 0.7 }}
-                    className={`absolute inset-0 ${slides[current].color}`}
-                >
-                    <div className="absolute inset-0 bg-black/30 md:bg-transparent">
-                        <img
-                            src={slides[current].image}
-                            alt={slides[current].title}
-                            className="w-full h-full object-cover opacity-80"
-                        />
-                    </div>
+        <section className="relative w-full min-h-[500px] md:min-h-[600px] bg-white flex flex-col items-center justify-center py-12 px-4 overflow-hidden font-poppins">
 
-                    <div className="container mx-auto px-4 h-full relative z-10 flex flex-col justify-center">
-                        <motion.div
-                            initial={{ y: 20, opacity: 0 }}
-                            animate={{ y: 0, opacity: 1 }}
-                            transition={{ delay: 0.3 }}
-                            className="max-w-2xl text-white"
-                        >
-                            <h3 className="text-brand-yellow font-bold uppercase tracking-widest text-sm mb-4">New Arrival</h3>
-                            <h2 className="text-4xl md:text-7xl font-bold mb-6 leading-tight">{slides[current].title}</h2>
-                            <p className="text-xl md:text-2xl mb-10 opacity-90 font-light">{slides[current].subtitle}</p>
-                            <a href={slides[current].link} className="bg-brand-yellow text-brand-blue px-10 py-4 rounded-full font-bold text-lg hover:bg-white hover:scale-105 transition-all shadow-xl inline-block mt-2">
-                                {slides[current].cta}
-                            </a>
-                        </motion.div>
-                    </div>
-                </motion.div>
-            </AnimatePresence>
+            {/* Typography */}
+            <h1 className="text-4xl md:text-5xl lg:text-6xl font-medium text-gray-900 mb-10 text-center tracking-tight">
+                Elevate Your Tech.
+            </h1>
 
-            <div className="absolute bottom-10 right-4 md:right-10 flex gap-4 z-20">
-                <button
-                    onClick={prev}
-                    className="w-12 h-12 rounded-full border border-white/30 flex items-center justify-center text-white hover:bg-white hover:text-brand-blue transition-all"
-                >
-                    <ChevronLeft className="w-6 h-6" />
-                </button>
-                <button
-                    onClick={next}
-                    className="w-12 h-12 rounded-full border border-white/30 flex items-center justify-center text-white hover:bg-white hover:text-brand-blue transition-all"
-                >
-                    <ChevronRight className="w-6 h-6" />
-                </button>
-            </div>
-
-            <div className="absolute bottom-10 left-1/2 -translate-x-1/2 flex gap-2 z-20">
-                {slides.map((_, i) => (
-                    <button
-                        key={i}
-                        onClick={() => setCurrent(i)}
-                        className={`w-3 h-3 rounded-full transition-all ${current === i ? 'bg-brand-yellow w-8' : 'bg-white/50'}`}
+            {/* Search Form */}
+            <form
+                onSubmit={handleSearch}
+                className="w-full max-w-2xl relative mb-8 group z-50"
+            >
+                <div className="relative">
+                    <input
+                        type="text"
+                        placeholder="I'm looking for..."
+                        value={searchQuery}
+                        onChange={(e) => setSearchQuery(e.target.value)}
+                        onFocus={() => setIsSearchFocused(true)}
+                        onBlur={() => setTimeout(() => setIsSearchFocused(false), 200)}
+                        className="w-full h-14 md:h-16 pl-8 pr-16 rounded-full border border-brand-blue bg-white text-gray-700 text-lg md:text-xl shadow-sm focus:outline-none focus:ring-2 focus:ring-brand-blue/50 focus:border-brand-blue transition-all placeholder:text-gray-400 placeholder:font-light"
                     />
-                ))}
+                    <button
+                        type="submit"
+                        className="absolute right-2 top-2 bottom-2 aspect-square flex items-center justify-center rounded-full text-brand-yellow hover:bg-gray-50 transition-colors"
+                    >
+                        <Search className="w-6 h-6 md:w-7 md:h-7 stroke-[2.5]" />
+                    </button>
+
+                    {/* Ajax Search Dropdown */}
+                    <AnimatePresence>
+                        {isSearchFocused && searchQuery.trim() && (
+                            <motion.div
+                                initial={{ opacity: 0, y: 10 }}
+                                animate={{ opacity: 1, y: 0 }}
+                                exit={{ opacity: 0, y: 10 }}
+                                className="absolute top-full left-0 right-0 mt-2 bg-white rounded-2xl shadow-2xl border border-gray-100 overflow-hidden flex flex-col z-[100]"
+                            >
+                                {isSearching ? (
+                                    <div className="p-6 text-center text-gray-400 text-sm flex items-center justify-center gap-2">
+                                        <div className="w-4 h-4 border-2 border-brand-yellow border-t-transparent rounded-full animate-spin"></div>
+                                        Searching...
+                                    </div>
+                                ) : searchResults.length > 0 ? (
+                                    <>
+                                        <div className="max-h-[350px] overflow-y-auto py-2">
+                                            {searchResults.map((product) => (
+                                                <Link
+                                                    key={product.id}
+                                                    href={`/shop/${product.slug}`}
+                                                    className="flex items-center gap-4 px-4 py-3 hover:bg-gray-50 border-b border-gray-50 last:border-0 transition-colors"
+                                                    onClick={() => setIsSearchFocused(false)}
+                                                >
+                                                    <div className="w-14 h-14 bg-white rounded-lg flex-shrink-0 flex items-center justify-center overflow-hidden border border-gray-100">
+                                                        <img
+                                                            src={product.primaryImage || product.image || 'https://images.unsplash.com/photo-1511707171634-5f897ff02aa9?q=80&w=400&auto=format&fit=crop'}
+                                                            alt={product.name}
+                                                            className="w-full h-full object-contain p-1"
+                                                        />
+                                                    </div>
+                                                    <div className="flex flex-col flex-1 min-w-0">
+                                                        <span className="text-sm font-semibold text-gray-800 truncate text-left">{product.name}</span>
+                                                        <span className="text-sm text-brand-blue font-black mt-0.5 text-left">${Number(product.price).toFixed(2)}</span>
+                                                    </div>
+                                                </Link>
+                                            ))}
+                                        </div>
+                                        <button
+                                            type="button"
+                                            onClick={() => handleSearch()}
+                                            className="w-full py-4 text-sm text-center text-brand-blue font-bold hover:bg-gray-50 border-t border-gray-100 transition-colors bg-white hover:text-blue-800"
+                                        >
+                                            View all results for "{searchQuery}"
+                                        </button>
+                                    </>
+                                ) : (
+                                    <div className="p-6 text-center text-gray-500 text-sm bg-gray-50">No products found for "{searchQuery}"</div>
+                                )}
+                            </motion.div>
+                        )}
+                    </AnimatePresence>
+                </div>
+            </form>
+
+            {/* Quick Links */}
+            <div className="flex flex-wrap items-center justify-center gap-6 md:gap-8 text-xs md:text-sm font-bold tracking-widest text-[#7a8b99] uppercase mb-12">
+                <Link href="/products?sort=trending" className="hover:text-brand-blue transition-colors">Trending</Link>
+                <Link href="/products?sort=new" className="hover:text-brand-blue transition-colors">New Arrivals</Link>
+                <Link href="/products?sort=best_sellers" className="hover:text-brand-blue transition-colors">Best Sellers</Link>
             </div>
+
         </section>
     );
 }

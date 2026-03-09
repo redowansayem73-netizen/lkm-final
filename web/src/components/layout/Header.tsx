@@ -28,11 +28,14 @@ export default function Header({ className = '' }: { className?: string }) {
     const [isBrandsOpen, setIsBrandsOpen] = useState(false);
     const [isScrolled, setIsScrolled] = useState(false);
     const [searchQuery, setSearchQuery] = useState("");
+    const [shopCategories, setShopCategories] = useState<any[]>([]);
+    const [shopBrands, setShopBrands] = useState<any[]>([]);
 
 
     const pathname = usePathname();
     const router = useRouter();
     const isHome = pathname === '/';
+    const isShopPage = pathname === '/shop' || pathname.startsWith('/shop/');
 
     const navRef = useRef<HTMLDivElement>(null);
     const { items } = useCart();
@@ -46,6 +49,19 @@ export default function Header({ className = '' }: { className?: string }) {
         window.addEventListener("scroll", handleScroll);
         return () => window.removeEventListener("scroll", handleScroll);
     }, []);
+
+    // Fetch dynamic shop filters only on shop page
+    useEffect(() => {
+        if (isShopPage) {
+            fetch('/api/products/filters')
+                .then(res => res.json())
+                .then(data => {
+                    setShopCategories(data.categories || []);
+                    setShopBrands(data.brands || []);
+                })
+                .catch(console.error);
+        }
+    }, [isShopPage]);
 
     // Close menu on route change
     useEffect(() => {
@@ -136,75 +152,132 @@ export default function Header({ className = '' }: { className?: string }) {
                             "hidden lg:flex items-center space-x-8 font-medium transition-colors",
                             isTransparent ? "text-white/90" : "text-gray-700"
                         )}>
-                            <Link href="/services" className="hover:text-brand-yellow transition">Services</Link>
+                            {isShopPage ? (
+                                <>
+                                    <Link href="/shop" className="hover:text-brand-yellow font-bold transition">All Products</Link>
 
-                            {/* Brands Dropdown */}
-                            <div className="group relative">
-                                <button className="flex items-center py-2 hover:text-brand-yellow focus:outline-none transition gap-1">
-                                    Brands <ChevronDown className="h-4 w-4" />
-                                </button>
-                                <div className="absolute top-full left-0 pt-4 opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200 transform origin-top w-56">
-                                    <div className="bg-white rounded-xl shadow-2xl border border-gray-100 p-4 text-gray-800">
-                                        <ul className="space-y-2">
-                                            {brandsData.map((brand) => (
-                                                <li key={brand.id}>
-                                                    <Link href={`/brands/${brand.slug}`} className="block hover:text-brand-blue hover:translate-x-1 transition-transform">
-                                                        {brand.name} Repairs
-                                                    </Link>
-                                                </li>
-                                            ))}
-                                        </ul>
+                                    {/* Dynamic Shop Categories Dropdown */}
+                                    <div className="group relative">
+                                        <button className="flex items-center py-2 hover:text-brand-yellow focus:outline-none transition gap-1">
+                                            Categories <ChevronDown className="h-4 w-4 transform group-hover:-rotate-180 transition-transform duration-300" />
+                                        </button>
+                                        <div className="absolute top-full left-0 pt-4 opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-300 transform translate-y-2 group-hover:translate-y-0 w-64 z-50">
+                                            <div className="bg-white rounded-xl shadow-2xl border border-gray-100 p-4 text-gray-800 font-normal">
+                                                <ul className="space-y-1 max-h-[60vh] overflow-y-auto pr-2">
+                                                    {shopCategories.length > 0 ? shopCategories.map((cat: any) => (
+                                                        <li key={cat.id}>
+                                                            <Link href={`/shop?category=${cat.slug}`} className="block px-3 py-2 rounded-lg hover:bg-gray-50 hover:text-brand-blue hover:translate-x-1 transition-all truncate text-sm">
+                                                                {cat.name}
+                                                            </Link>
+                                                        </li>
+                                                    )) : (
+                                                        <li className="px-3 py-2 text-gray-400 text-sm">Loading categories...</li>
+                                                    )}
+                                                </ul>
+                                            </div>
+                                        </div>
                                     </div>
-                                </div>
-                            </div>
 
-                            {/* Repair Mega Menu */}
-                            <div className="group relative">
-                                <button className="flex items-center py-2 hover:text-brand-yellow focus:outline-none transition gap-1">
-                                    Repair <ChevronDown className="h-4 w-4" />
-                                </button>
-                                <div className="absolute top-full left-1/2 -translate-x-1/2 pt-4 opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200 transform origin-top w-[300px]">
-                                    <div className="bg-white rounded-xl shadow-2xl border border-gray-100 p-6 text-gray-800">
-                                        <h3 className="text-sm font-bold text-gray-400 uppercase tracking-wider mb-4 border-b pb-2">Services</h3>
-                                        <ul className="space-y-2">
-                                            {servicesData.map((service) => (
-                                                <li key={service.id}>
-                                                    <Link href={`/services/${service.slug}`} className="block hover:text-brand-blue hover:translate-x-1 transition-transform">
-                                                        {service.title}
-                                                    </Link>
-                                                </li>
-                                            ))}
-                                        </ul>
+                                    {/* Dynamic Shop Brands Dropdown */}
+                                    <div className="group relative">
+                                        <button className="flex items-center py-2 hover:text-brand-yellow focus:outline-none transition gap-1">
+                                            Brands <ChevronDown className="h-4 w-4 transform group-hover:-rotate-180 transition-transform duration-300" />
+                                        </button>
+                                        <div className="absolute top-full left-0 pt-4 opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-300 transform translate-y-2 group-hover:translate-y-0 w-56 z-50">
+                                            <div className="bg-white rounded-xl shadow-2xl border border-gray-100 p-4 text-gray-800 font-normal">
+                                                <ul className="space-y-1 max-h-[60vh] overflow-y-auto pr-2">
+                                                    {shopBrands.length > 0 ? shopBrands.map((brandInfo: any) => (
+                                                        <li key={brandInfo.brand}>
+                                                            <Link href={`/shop?brand=${encodeURIComponent(brandInfo.brand)}`} className="flex justify-between items-center px-3 py-2 rounded-lg hover:bg-gray-50 hover:text-brand-blue hover:translate-x-1 transition-all text-sm">
+                                                                <span className="truncate">{brandInfo.brand}</span>
+                                                                <span className="text-xs bg-gray-100 text-gray-500 py-0.5 px-2 rounded-full font-medium">{brandInfo.count}</span>
+                                                            </Link>
+                                                        </li>
+                                                    )) : (
+                                                        <li className="px-3 py-2 text-gray-400 text-sm">Loading brands...</li>
+                                                    )}
+                                                </ul>
+                                            </div>
+                                        </div>
                                     </div>
-                                </div>
-                            </div>
 
-                            <Link href="/about" className="hover:text-brand-yellow transition">About Us</Link>
-                            <Link href="/blog" className="hover:text-brand-yellow transition">Blog</Link>
-                            <Link href="/contact" className="hover:text-brand-yellow transition">Contact Us</Link>
+                                    <Link href="/shop?sort=new" className="hover:text-brand-yellow font-bold transition">New Arrivals</Link>
+                                </>
+                            ) : (
+                                <>
+                                    <Link href="/services" className="hover:text-brand-yellow transition">Services</Link>
+
+                                    {/* Original Brands Dropdown */}
+                                    <div className="group relative">
+                                        <button className="flex items-center py-2 hover:text-brand-yellow focus:outline-none transition gap-1">
+                                            Brands <ChevronDown className="h-4 w-4" />
+                                        </button>
+                                        <div className="absolute top-full left-0 pt-4 opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200 transform origin-top w-56">
+                                            <div className="bg-white rounded-xl shadow-2xl border border-gray-100 p-4 text-gray-800">
+                                                <ul className="space-y-2">
+                                                    {brandsData.map((brand) => (
+                                                        <li key={brand.id}>
+                                                            <Link href={`/brands/${brand.slug}`} className="block hover:text-brand-blue hover:translate-x-1 transition-transform">
+                                                                {brand.name} Repairs
+                                                            </Link>
+                                                        </li>
+                                                    ))}
+                                                </ul>
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    {/* Original Repair Mega Menu */}
+                                    <div className="group relative">
+                                        <button className="flex items-center py-2 hover:text-brand-yellow focus:outline-none transition gap-1">
+                                            Repair <ChevronDown className="h-4 w-4" />
+                                        </button>
+                                        <div className="absolute top-full left-1/2 -translate-x-1/2 pt-4 opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200 transform origin-top w-[300px]">
+                                            <div className="bg-white rounded-xl shadow-2xl border border-gray-100 p-6 text-gray-800">
+                                                <h3 className="text-sm font-bold text-gray-400 uppercase tracking-wider mb-4 border-b pb-2">Services</h3>
+                                                <ul className="space-y-2">
+                                                    {servicesData.map((service) => (
+                                                        <li key={service.id}>
+                                                            <Link href={`/services/${service.slug}`} className="block hover:text-brand-blue hover:translate-x-1 transition-transform">
+                                                                {service.title}
+                                                            </Link>
+                                                        </li>
+                                                    ))}
+                                                </ul>
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    <Link href="/about" className="hover:text-brand-yellow transition">About Us</Link>
+                                    <Link href="/blog" className="hover:text-brand-yellow transition">Blog</Link>
+                                    <Link href="/contact" className="hover:text-brand-yellow transition">Contact Us</Link>
+                                </>
+                            )}
                         </nav>
 
                         {/* Right Side Icons & CTA */}
                         <div className="flex items-center space-x-4">
-                            {/* Search (Compact) */}
-                            <div className="hidden xl:flex relative">
-                                <input
-                                    type="text"
-                                    placeholder="Search..."
-                                    value={searchQuery}
-                                    onChange={(e) => setSearchQuery(e.target.value)}
-                                    onKeyDown={handleSearch}
-                                    className={clsx(
-                                        "w-48 border rounded-full py-1.5 px-4 text-sm focus:outline-none focus:border-brand-blue transition",
-                                        isTransparent
-                                            ? "bg-white/10 border-white/20 text-white placeholder-white/60 focus:bg-white focus:text-gray-900"
-                                            : "bg-gray-50 border-gray-200 focus:bg-white"
-                                    )}
-                                />
-                                <button onClick={handleSearch} className="absolute right-3 top-2">
-                                    <Search className={clsx("h-4 w-4", isTransparent ? "text-white/60" : "text-gray-400")} />
-                                </button>
-                            </div>
+                            {/* Search (Compact) - Hidden on Shop */}
+                            {!isShopPage && (
+                                <div className="hidden xl:flex relative">
+                                    <input
+                                        type="text"
+                                        placeholder="Search..."
+                                        value={searchQuery}
+                                        onChange={(e) => setSearchQuery(e.target.value)}
+                                        onKeyDown={handleSearch}
+                                        className={clsx(
+                                            "w-48 border rounded-full py-1.5 px-4 text-sm focus:outline-none focus:border-brand-blue transition",
+                                            isTransparent
+                                                ? "bg-white/10 border-white/20 text-white placeholder-white/60 focus:bg-white focus:text-gray-900"
+                                                : "bg-gray-50 border-gray-200 focus:bg-white"
+                                        )}
+                                    />
+                                    <button onClick={handleSearch} className="absolute right-3 top-2">
+                                        <Search className={clsx("h-4 w-4", isTransparent ? "text-white/60" : "text-gray-400")} />
+                                    </button>
+                                </div>
+                            )}
 
                             <Link href="/cart" className={clsx("relative hover:text-brand-yellow transition", isTransparent ? "text-white" : "text-gray-700")}>
                                 <ShoppingCart className="h-6 w-6" />
@@ -215,12 +288,14 @@ export default function Header({ className = '' }: { className?: string }) {
                                 )}
                             </Link>
 
-                            <Link
-                                href="/shop"
-                                className="hidden md:inline-flex items-center justify-center px-5 py-2 border border-transparent text-sm font-bold rounded-full shadow-lg text-brand-blue bg-brand-yellow hover:bg-white hover:scale-105 transition-all"
-                            >
-                                Online Store
-                            </Link>
+                            {!isShopPage && (
+                                <Link
+                                    href="/shop"
+                                    className="hidden md:inline-flex items-center justify-center px-5 py-2 border border-transparent text-sm font-bold rounded-full shadow-lg text-brand-blue bg-brand-yellow hover:bg-white hover:scale-105 transition-all"
+                                >
+                                    Online Store
+                                </Link>
+                            )}
 
                             {/* Mobile Menu Button */}
                             <button
@@ -237,74 +312,137 @@ export default function Header({ className = '' }: { className?: string }) {
             {/* Mobile Navigation Menu */}
             <div className={`lg:hidden bg-white border-t border-gray-100 overflow-hidden transition-all duration-300 ${isMenuOpen ? 'max-h-screen opacity-100 shadow-xl' : 'max-h-0 opacity-0'}`}>
                 <div className="container mx-auto px-4 py-4 space-y-4 font-medium">
-                    {/* Search Mobile */}
-                    <div className="relative">
-                        <input
-                            type="text"
-                            placeholder="Search..."
-                            value={searchQuery}
-                            onChange={(e) => setSearchQuery(e.target.value)}
-                            onKeyDown={handleSearch}
-                            className="w-full border border-gray-200 rounded-lg py-3 px-4 focus:outline-none focus:border-brand-blue bg-gray-50 text-gray-900"
-                        />
-                        <button onClick={handleSearch} className="absolute right-3 top-3.5">
-                            <Search className="h-5 w-5 text-gray-400" />
-                        </button>
-                    </div>
+                    {/* Search Mobile - Hidden on Shop */}
+                    {!isShopPage && (
+                        <div className="relative">
+                            <input
+                                type="text"
+                                placeholder="Search..."
+                                value={searchQuery}
+                                onChange={(e) => setSearchQuery(e.target.value)}
+                                onKeyDown={handleSearch}
+                                className="w-full border border-gray-200 rounded-lg py-3 px-4 focus:outline-none focus:border-brand-blue bg-gray-50 text-gray-900"
+                            />
+                            <button onClick={handleSearch} className="absolute right-3 top-3.5">
+                                <Search className="h-5 w-5 text-gray-400" />
+                            </button>
+                        </div>
+                    )}
 
                     <div className="space-y-1">
-                        <div>
-                            <button
-                                onClick={() => setIsBrandsOpen(!isBrandsOpen)}
-                                className="flex items-center justify-between w-full py-3 text-lg text-gray-800 border-b border-gray-100"
-                            >
-                                Brands <ChevronDown className={`h-5 w-5 transition-transform ${isBrandsOpen ? 'rotate-180' : ''}`} />
-                            </button>
-                            <div className={`pl-4 bg-gray-50 rounded-b-lg space-y-3 overflow-hidden transition-all duration-300 ${isBrandsOpen ? 'max-h-[400px] py-4' : 'max-h-0'}`}>
-                                <ul className="space-y-3">
-                                    {brandsData.map((brand) => (
-                                        <li key={brand.id}>
-                                            <Link href={`/brands/${brand.slug}`} className="block text-gray-600" onClick={toggleMenu}>
-                                                {brand.name} Repairs
-                                            </Link>
-                                        </li>
-                                    ))}
-                                </ul>
-                            </div>
-                        </div>
+                        {isShopPage ? (
+                            <>
+                                <Link href="/shop" className="block py-3 text-lg font-bold text-brand-blue border-b border-gray-100" onClick={toggleMenu}>
+                                    All Products
+                                </Link>
 
-                        <div>
-                            <button
-                                onClick={() => setIsRepairOpen(!isRepairOpen)}
-                                className="flex items-center justify-between w-full py-3 text-lg text-gray-800 border-b border-gray-100"
-                            >
-                                Services <ChevronDown className={`h-5 w-5 transition-transform ${isRepairOpen ? 'rotate-180' : ''}`} />
-                            </button>
-                            <div className={`pl-4 bg-gray-50 rounded-b-lg space-y-3 overflow-hidden transition-all duration-300 ${isRepairOpen ? 'max-h-[400px] py-4' : 'max-h-0'}`}>
-                                <ul className="space-y-3">
-                                    {servicesData.map((service) => (
-                                        <li key={service.id}>
-                                            <Link href={`/services/${service.slug}`} className="block text-gray-600" onClick={toggleMenu}>
-                                                {service.title}
-                                            </Link>
-                                        </li>
-                                    ))}
-                                </ul>
-                            </div>
-                        </div>
+                                <div>
+                                    <button
+                                        onClick={() => setIsBrandsOpen(!isBrandsOpen)}
+                                        className="flex items-center justify-between w-full py-3 text-lg text-gray-800 border-b border-gray-100"
+                                    >
+                                        Categories <ChevronDown className={`h-5 w-5 transition-transform ${isBrandsOpen ? 'rotate-180' : ''}`} />
+                                    </button>
+                                    <div className={`pl-4 bg-gray-50 rounded-b-lg space-y-3 overflow-hidden transition-all duration-300 ${isBrandsOpen ? 'max-h-[400px] py-4 overflow-y-auto' : 'max-h-0'}`}>
+                                        <ul className="space-y-3">
+                                            {shopCategories.length > 0 ? shopCategories.map((cat: any) => (
+                                                <li key={cat.id}>
+                                                    <Link href={`/shop?category=${cat.slug}`} className="block text-gray-600 truncate" onClick={toggleMenu}>
+                                                        {cat.name}
+                                                    </Link>
+                                                </li>
+                                            )) : (
+                                                <li className="text-gray-400 text-sm">Loading categories...</li>
+                                            )}
+                                        </ul>
+                                    </div>
+                                </div>
 
-                        <Link href="/about" className="block py-3 text-lg text-gray-800 border-b border-gray-100" onClick={toggleMenu}>
-                            About Us
-                        </Link>
-                        <Link href="/blog" className="block py-3 text-lg text-gray-800 border-b border-gray-100" onClick={toggleMenu}>
-                            Blog
-                        </Link>
-                        <Link href="/contact" className="block py-3 text-lg text-gray-800 border-b border-gray-100" onClick={toggleMenu}>
-                            Contact Us
-                        </Link>
-                        <Link href="/shop" className="block py-3 text-lg text-brand-blue" onClick={toggleMenu}>
-                            Online Store
-                        </Link>
+                                <div>
+                                    <button
+                                        onClick={() => setIsRepairOpen(!isRepairOpen)}
+                                        className="flex items-center justify-between w-full py-3 text-lg text-gray-800 border-b border-gray-100"
+                                    >
+                                        Brands <ChevronDown className={`h-5 w-5 transition-transform ${isRepairOpen ? 'rotate-180' : ''}`} />
+                                    </button>
+                                    <div className={`pl-4 bg-gray-50 rounded-b-lg space-y-3 overflow-hidden transition-all duration-300 ${isRepairOpen ? 'max-h-[400px] py-4 overflow-y-auto' : 'max-h-0'}`}>
+                                        <ul className="space-y-3">
+                                            {shopBrands.length > 0 ? shopBrands.map((brandInfo: any) => (
+                                                <li key={brandInfo.brand}>
+                                                    <Link href={`/shop?brand=${encodeURIComponent(brandInfo.brand)}`} className="block text-gray-600" onClick={toggleMenu}>
+                                                        <span className="truncate">{brandInfo.brand}</span> <span className="text-xs text-gray-400">({brandInfo.count})</span>
+                                                    </Link>
+                                                </li>
+                                            )) : (
+                                                <li className="text-gray-400 text-sm">Loading brands...</li>
+                                            )}
+                                        </ul>
+                                    </div>
+                                </div>
+
+                                <Link href="/shop?sort=new" className="block py-3 text-lg font-bold text-gray-800 border-b border-gray-100" onClick={toggleMenu}>
+                                    New Arrivals
+                                </Link>
+                                <Link href="/track-order" className="block py-3 text-lg font-bold text-gray-800 border-b border-gray-100" onClick={toggleMenu}>
+                                    Track Order
+                                </Link>
+                            </>
+                        ) : (
+                            <>
+                                <div>
+                                    <button
+                                        onClick={() => setIsBrandsOpen(!isBrandsOpen)}
+                                        className="flex items-center justify-between w-full py-3 text-lg text-gray-800 border-b border-gray-100"
+                                    >
+                                        Brands <ChevronDown className={`h-5 w-5 transition-transform ${isBrandsOpen ? 'rotate-180' : ''}`} />
+                                    </button>
+                                    <div className={`pl-4 bg-gray-50 rounded-b-lg space-y-3 overflow-hidden transition-all duration-300 ${isBrandsOpen ? 'max-h-[400px] py-4' : 'max-h-0'}`}>
+                                        <ul className="space-y-3">
+                                            {brandsData.map((brand) => (
+                                                <li key={brand.id}>
+                                                    <Link href={`/brands/${brand.slug}`} className="block text-gray-600" onClick={toggleMenu}>
+                                                        {brand.name} Repairs
+                                                    </Link>
+                                                </li>
+                                            ))}
+                                        </ul>
+                                    </div>
+                                </div>
+
+                                <div>
+                                    <button
+                                        onClick={() => setIsRepairOpen(!isRepairOpen)}
+                                        className="flex items-center justify-between w-full py-3 text-lg text-gray-800 border-b border-gray-100"
+                                    >
+                                        Services <ChevronDown className={`h-5 w-5 transition-transform ${isRepairOpen ? 'rotate-180' : ''}`} />
+                                    </button>
+                                    <div className={`pl-4 bg-gray-50 rounded-b-lg space-y-3 overflow-hidden transition-all duration-300 ${isRepairOpen ? 'max-h-[400px] py-4' : 'max-h-0'}`}>
+                                        <ul className="space-y-3">
+                                            {servicesData.map((service) => (
+                                                <li key={service.id}>
+                                                    <Link href={`/services/${service.slug}`} className="block text-gray-600" onClick={toggleMenu}>
+                                                        {service.title}
+                                                    </Link>
+                                                </li>
+                                            ))}
+                                        </ul>
+                                    </div>
+                                </div>
+
+                                <Link href="/about" className="block py-3 text-lg text-gray-800 border-b border-gray-100" onClick={toggleMenu}>
+                                    About Us
+                                </Link>
+                                <Link href="/blog" className="block py-3 text-lg text-gray-800 border-b border-gray-100" onClick={toggleMenu}>
+                                    Blog
+                                </Link>
+                                <Link href="/contact" className="block py-3 text-lg text-gray-800 border-b border-gray-100" onClick={toggleMenu}>
+                                    Contact Us
+                                </Link>
+                                <Link href="/shop" className="block py-3 text-lg text-brand-blue" onClick={toggleMenu}>
+                                    Online Store
+                                </Link>
+                            </>
+                        )}
                     </div>
                 </div>
             </div>

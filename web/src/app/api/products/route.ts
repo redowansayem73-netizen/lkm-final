@@ -3,7 +3,7 @@ import { db } from '@/db';
 import { products, productVariants, productImages, categories } from '@/db/schema';
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
-import { eq, and, gte, lte, inArray, like, exists, or } from 'drizzle-orm';
+import { eq, and, gte, lte, inArray, like, exists, or, sql } from 'drizzle-orm';
 
 export async function GET(request: Request) {
     try {
@@ -20,11 +20,16 @@ export async function GET(request: Request) {
         const page = parseInt(searchParams.get('page') || '1');
         const offset = (page - 1) * limit;
 
-        let categoryId = null;
+        let categoryIds: number[] = [];
         if (categorySlug) {
             const category = await db.select().from(categories).where(eq(categories.slug, categorySlug)).limit(1);
             if (category.length > 0) {
-                categoryId = category[0].id;
+                const parentId = category[0].id;
+                // Also include all child categories so parent categories show all their children's products
+                const childCats = await db.select({ id: categories.id })
+                    .from(categories)
+                    .where(eq(categories.parentId, parentId));
+                categoryIds = [parentId, ...childCats.map(c => c.id)];
             }
         }
 
@@ -33,8 +38,12 @@ export async function GET(request: Request) {
         if (brand) {
             conditions.push(eq(products.brand, brand));
         }
-        if (categoryId) {
-            conditions.push(eq(products.categoryId, categoryId));
+        if (categoryIds.length > 0) {
+            if (categoryIds.length === 1) {
+                conditions.push(eq(products.categoryId, categoryIds[0]));
+            } else {
+                conditions.push(inArray(products.categoryId, categoryIds));
+            }
         }
         if (minPrice) {
             conditions.push(gte(products.price, minPrice.toString()));
@@ -51,16 +60,37 @@ export async function GET(request: Request) {
             }
         }
 
-        // Search filter (name, SKU, brand, tags)
+        // Advanced Search filter (name, SKU, brand, tags)
         if (search) {
-            conditions.push(
-                or(
-                    like(products.name, `%${search}%`),
-                    like(products.sku, `%${search}%`),
-                    like(products.brand, `%${search}%`),
-                    like(products.tags, `%${search}%`)
-                )
-            );
+            // Stop words that do not add value to the product search
+            const stopWords = ['for', 'the', 'and', 'with', 'in', 'of', 'a', 'an', 'to', 'type', 'types', 'phone'];
+
+            // Clean, split, and basic-stem the search string into meaningful terms
+            const searchTerms = search
+                .toLowerCase()
+                .replace(/[^a-z0-9\s-]/g, ' ') // Remove special chars but keep hyphens/spaces
+                .split(/\s+/)
+                .filter(term => term.length > 0 && !stopWords.includes(term))
+                .map(term => {
+                    // Simple, broad stemming for plurals
+                    if (term.length > 4 && term.endsWith('es')) return term.slice(0, -2);
+                    if (term.length > 3 && term.endsWith('s')) return term.slice(0, -1);
+                    return term;
+                });
+
+            if (searchTerms.length > 0) {
+                // For each term, it must be found in at least one of these columns (AND of ORs)
+                const termConditions = searchTerms.map(term =>
+                    or(
+                        like(products.name, `%${term}%`),
+                        like(products.sku, `%${term}%`),
+                        like(products.brand, `%${term}%`),
+                        like(products.tags, `%${term}%`)
+                    )
+                );
+                // Push the AND condition enclosing all terms
+                conditions.push(and(...termConditions));
+            }
         }
 
         // Tags filter (exact matches)
