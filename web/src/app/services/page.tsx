@@ -1,10 +1,9 @@
 'use client';
 
-import React, { useState } from 'react';
-import { Smartphone, Battery, Droplets, Zap, Camera, Speaker, Power, ArrowRight, Watch, Truck, ChevronDown, ChevronUp } from 'lucide-react';
+import React, { useState, useEffect } from 'react';
+import { Smartphone, Battery, Droplets, Zap, Camera, Speaker, Power, ArrowRight, Watch, Truck, ChevronDown, ChevronUp, Loader2 } from 'lucide-react';
 import Link from 'next/link';
 import { motion, AnimatePresence } from 'framer-motion';
-import servicesData from '@/data/services.json';
 
 // Icon mapping
 const iconMap: { [key: string]: any } = {
@@ -19,8 +18,31 @@ const iconMap: { [key: string]: any } = {
     Truck
 };
 
+interface Service {
+    id: number;
+    title: string;
+    slug: string;
+    icon: string | null;
+    heroDescription: string | null;
+    content: string | null;
+    isActive: boolean;
+}
+
 export default function ServicesPage() {
     const [expandedService, setExpandedService] = useState<string | null>(null);
+    const [services, setServices] = useState<Service[]>([]);
+    const [loading, setLoading] = useState(true);
+
+    useEffect(() => {
+        fetch('/api/admin/services?pageSize=50')
+            .then(res => res.json())
+            .then(data => {
+                // Only show active services
+                setServices((data.services || []).filter((s: Service) => s.isActive));
+            })
+            .catch(console.error)
+            .finally(() => setLoading(false));
+    }, []);
 
     const toggleService = (id: string) => {
         setExpandedService(expandedService === id ? null : id);
@@ -52,93 +74,98 @@ export default function ServicesPage() {
 
             {/* Services Grid */}
             <div className="container mx-auto px-4 mt-8 md:mt-12 relative z-20">
-                <div className="grid grid-cols-3 md:grid-cols-2 lg:grid-cols-3 gap-3 md:gap-8">
-                    {servicesData.map((service, index) => {
-                        const Icon = iconMap[service.icon] || Smartphone;
-                        const isExpanded = expandedService === service.id;
+                {loading ? (
+                    <div className="flex justify-center py-20">
+                        <Loader2 className="w-8 h-8 animate-spin text-brand-blue" />
+                    </div>
+                ) : services.length === 0 ? (
+                    <div className="text-center py-20 text-gray-400">
+                        <p className="text-xl">No services available at this time.</p>
+                    </div>
+                ) : (
+                    <div className="grid grid-cols-3 md:grid-cols-2 lg:grid-cols-3 gap-3 md:gap-8">
+                        {services.map((service, index) => {
+                            const Icon = iconMap[service.icon || ''] || Smartphone;
+                            const isExpanded = expandedService === String(service.id);
+                            const rawDesc = service.heroDescription || service.title;
+                            const displayDesc = rawDesc.length > 97 ? rawDesc.substring(0, 97) + '...' : rawDesc;
 
-                        return (
-                            <motion.div
-                                key={service.id}
-                                initial={{ opacity: 0, scale: 0.95 }}
-                                animate={{ opacity: 1, scale: 1 }}
-                                transition={{ delay: index * 0.05 }}
-                                className={`
-                                    bg-white rounded-xl md:rounded-2xl shadow-md hover:shadow-xl transition-all duration-300 overflow-hidden border border-gray-100 flex flex-col
-                                    ${isExpanded ? 'col-span-3 md:col-span-2 lg:col-span-1 ring-2 ring-brand-yellow/50' : ''}
-                                `}
-                            >
-                                <div
-                                    className="p-3 md:p-8 cursor-pointer flex flex-col items-center md:items-start text-center md:text-left h-full"
-                                    onClick={() => toggleService(service.id)}
+                            return (
+                                <motion.div
+                                    key={service.id}
+                                    initial={{ opacity: 0, scale: 0.95 }}
+                                    animate={{ opacity: 1, scale: 1 }}
+                                    transition={{ delay: index * 0.05 }}
+                                    className={`
+                                        bg-white rounded-xl md:rounded-2xl shadow-md hover:shadow-xl transition-all duration-300 overflow-hidden border border-gray-100 flex flex-col
+                                        ${isExpanded ? 'col-span-3 md:col-span-2 lg:col-span-1 ring-2 ring-brand-yellow/50' : ''}
+                                    `}
                                 >
-                                    <div className={`
-                                        p-2 md:p-4 rounded-lg md:rounded-xl mb-3 md:mb-6 transition-colors duration-300
-                                        ${isExpanded ? 'bg-brand-yellow text-brand-blue' : 'bg-brand-blue/5 text-brand-blue'}
-                                    `}>
-                                        <Icon className="w-6 h-6 md:w-10 md:h-10" />
+                                    <div
+                                        className="p-3 md:p-8 cursor-pointer flex flex-col items-center md:items-start text-center md:text-left h-full"
+                                        onClick={() => toggleService(String(service.id))}
+                                    >
+                                        <div className={`
+                                            p-2 md:p-4 rounded-lg md:rounded-xl mb-3 md:mb-6 transition-colors duration-300
+                                            ${isExpanded ? 'bg-brand-yellow text-brand-blue' : 'bg-brand-blue/5 text-brand-blue'}
+                                        `}>
+                                            <Icon className="w-6 h-6 md:w-10 md:h-10" />
+                                        </div>
+
+                                        <h3 className="text-[10px] md:text-2xl font-bold text-gray-900 mb-1 md:mb-3 leading-tight uppercase md:normal-case">
+                                            {service.title.split(' ').slice(0, 2).join(' ')}
+                                            {service.title.split(' ').length > 2 && (
+                                                <span className="hidden md:inline"> {service.title.split(' ').slice(2).join(' ')}</span>
+                                            )}
+                                        </h3>
+
+                                        <p className="hidden md:block text-gray-600 mb-6 flex-grow leading-relaxed">
+                                            {displayDesc}
+                                        </p>
+
+                                        <div className="mt-auto flex items-center justify-center md:justify-between w-full">
+                                            <span className="text-[8px] md:text-sm font-bold text-brand-blue uppercase tracking-wider hidden md:block">
+                                                {isExpanded ? 'Show Less' : 'View Details'}
+                                            </span>
+                                            {isExpanded ? (
+                                                <ChevronUp className="w-3 h-3 md:w-5 md:h-5 text-brand-blue" />
+                                            ) : (
+                                                <ChevronDown className="w-3 h-3 md:w-5 md:h-5 text-gray-400" />
+                                            )}
+                                        </div>
                                     </div>
 
-                                    <h3 className="text-[10px] md:text-2xl font-bold text-gray-900 mb-1 md:mb-3 leading-tight uppercase md:normal-case">
-                                        {service.title.split(' ').slice(0, 2).join(' ')}
-                                        {service.title.split(' ').length > 2 && (
-                                            <span className="hidden md:inline"> {service.title.split(' ').slice(2).join(' ')}</span>
-                                        )}
-                                    </h3>
-
-                                    <p className="hidden md:block text-gray-600 mb-6 flex-grow leading-relaxed line-clamp-3">
-                                        {service.description}
-                                    </p>
-
-                                    <div className="mt-auto flex items-center justify-center md:justify-between w-full">
-                                        <span className="text-[8px] md:text-sm font-bold text-brand-blue uppercase tracking-wider hidden md:block">
-                                            {isExpanded ? 'Show Less' : 'View Details'}
-                                        </span>
-                                        {isExpanded ? (
-                                            <ChevronUp className="w-3 h-3 md:w-5 md:h-5 text-brand-blue" />
-                                        ) : (
-                                            <ChevronDown className="w-3 h-3 md:w-5 md:h-5 text-gray-400" />
-                                        )}
-                                    </div>
-                                </div>
-
-                                <AnimatePresence>
-                                    {isExpanded && (
-                                        <motion.div
-                                            initial={{ opacity: 0 }}
-                                            animate={{ opacity: 1 }}
-                                            exit={{ opacity: 0 }}
-                                            transition={{ duration: 0.2 }}
-                                            className="border-t border-gray-100 bg-gray-50/50"
-                                        >
-                                            <div className="p-4 md:p-8">
-                                                <p className="text-sm md:text-base text-gray-700 leading-relaxed mb-6">
-                                                    {service.details || service.description}
-                                                </p>
-                                                <div className="flex flex-wrap gap-2 mb-6">
-                                                    {service.keywords?.map((keyword: string) => (
-                                                        <span key={keyword} className="px-2 py-1 bg-white border border-gray-200 rounded-md text-[10px] md:text-xs text-gray-500 font-medium">
-                                                            #{keyword}
-                                                        </span>
-                                                    ))}
+                                    <AnimatePresence>
+                                        {isExpanded && (
+                                            <motion.div
+                                                initial={{ opacity: 0 }}
+                                                animate={{ opacity: 1 }}
+                                                exit={{ opacity: 0 }}
+                                                transition={{ duration: 0.2 }}
+                                                className="border-t border-gray-100 bg-gray-50/50"
+                                            >
+                                                <div className="p-4 md:p-8">
+                                                    <p className="text-sm md:text-base text-gray-700 leading-relaxed mb-6">
+                                                        {service.heroDescription || service.title}
+                                                    </p>
+                                                    <Link
+                                                        href={`/services/${service.slug}`}
+                                                        className="inline-flex items-center gap-2 bg-brand-blue text-white px-4 py-2 md:px-6 md:py-3 rounded-lg font-bold text-xs md:text-sm hover:bg-blue-700 transition"
+                                                    >
+                                                        Book Repair <ArrowRight className="w-3 h-3 md:w-4 md:h-4" />
+                                                    </Link>
                                                 </div>
-                                                <Link
-                                                    href={`/services/${service.slug}`}
-                                                    className="inline-flex items-center gap-2 bg-brand-blue text-white px-4 py-2 md:px-6 md:py-3 rounded-lg font-bold text-xs md:text-sm hover:bg-blue-700 transition"
-                                                >
-                                                    Book Repair <ArrowRight className="w-3 h-3 md:w-4 md:h-4" />
-                                                </Link>
-                                            </div>
-                                        </motion.div>
-                                    )}
-                                </AnimatePresence>
-                            </motion.div>
-                        );
-                    })}
-                </div>
+                                            </motion.div>
+                                        )}
+                                    </AnimatePresence>
+                                </motion.div>
+                            );
+                        })}
+                    </div>
+                )}
             </div>
 
-            {/* OTA CTA */}
+            {/* CTA */}
             <motion.div
                 initial={{ opacity: 0 }}
                 whileInView={{ opacity: 1 }}
@@ -146,7 +173,7 @@ export default function ServicesPage() {
                 className="container mx-auto px-4 mt-20 md:mt-32 text-center"
             >
                 <div className="bg-white rounded-3xl p-8 md:p-16 shadow-xl border border-gray-100 max-w-4xl mx-auto">
-                    <h2 className="text-2xl md:text-4xl font-bold mb-4 md:mb-6">Can't find what you're looking for?</h2>
+                    <h2 className="text-2xl md:text-4xl font-bold mb-4 md:mb-6">Can&apos;t find what you&apos;re looking for?</h2>
                     <p className="text-gray-600 mb-8 md:mb-10 text-lg">
                         We repair almost every device imaginable. Our technicians are ready for any challenge.
                     </p>

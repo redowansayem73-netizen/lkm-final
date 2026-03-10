@@ -8,7 +8,7 @@ import { Phone, MapPin } from "lucide-react";
 
 export default function Home() {
   return (
-    <main className="overflow-x-hidden bg-white">
+    <main className="overflow-x-hidden">
       {/* 1. Hero Section with Quick Quote */}
       <Hero />
 

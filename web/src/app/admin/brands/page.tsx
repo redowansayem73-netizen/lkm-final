@@ -1,7 +1,8 @@
 "use client";
 
 import { useState, useEffect } from 'react';
-import { Plus, Search, Edit, Trash2, X, Save, Loader2, Image as ImageIcon } from 'lucide-react';
+import Link from 'next/link';
+import { Plus, Search, Edit, Trash2, X, Save, Loader2, Image as ImageIcon, FileEdit } from 'lucide-react';
 
 interface Brand {
     id: number;
@@ -162,13 +163,22 @@ export default function AdminBrandsPage() {
                     <h1 className="text-2xl font-bold text-gray-900">Brands</h1>
                     <p className="text-sm text-gray-500">Manage brands and their logos.</p>
                 </div>
-                <button
-                    onClick={openAddModal}
-                    className="flex items-center gap-2 rounded-xl bg-blue-600 px-4 py-2.5 text-sm font-medium text-white hover:bg-blue-700 transition-colors"
-                >
-                    <Plus className="h-4 w-4" />
-                    Add Brand
-                </button>
+                <div className="flex items-center gap-2">
+                    <button
+                        onClick={openAddModal}
+                        className="flex items-center gap-2 rounded-xl bg-blue-600 px-4 py-2.5 text-sm font-medium text-white hover:bg-blue-700 transition-colors"
+                    >
+                        <Plus className="h-4 w-4" />
+                        Quick Add
+                    </button>
+                    <Link
+                        href="/admin/brands/new"
+                        className="flex items-center gap-2 rounded-xl bg-emerald-600 px-4 py-2.5 text-sm font-medium text-white hover:bg-emerald-700 transition-colors"
+                    >
+                        <FileEdit className="h-4 w-4" />
+                        Full Editor + SEO
+                    </Link>
+                </div>
             </div>
 
             <div className="flex items-center gap-4 rounded-xl bg-white p-4 shadow-sm border border-gray-100">
@@ -230,9 +240,17 @@ export default function AdminBrandsPage() {
                                             <button
                                                 onClick={() => openEditModal(brand)}
                                                 className="p-2 text-gray-400 hover:text-blue-600 hover:bg-blue-50 rounded-lg transition-colors"
+                                                title="Quick Edit"
                                             >
                                                 <Edit className="h-4 w-4" />
                                             </button>
+                                            <Link
+                                                href={`/admin/brands/${brand.id}`}
+                                                className="p-2 text-gray-400 hover:text-emerald-600 hover:bg-emerald-50 rounded-lg transition-colors"
+                                                title="Full Editor + SEO"
+                                            >
+                                                <FileEdit className="h-4 w-4" />
+                                            </Link>
                                             <button
                                                 onClick={() => handleDelete(brand.id)}
                                                 className="p-2 text-gray-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition-colors"

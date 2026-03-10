@@ -5,7 +5,7 @@ import { useRouter } from 'next/navigation';
 import {
     Save, Eye, ArrowLeft, Image as ImageIcon,
     Search, Globe, ChevronDown, CheckCircle2,
-    AlertCircle, Info, Hash, Clock, X, Trash2
+    AlertCircle, Info, Hash, Clock, X, Trash2, RefreshCw
 } from 'lucide-react';
 import Link from 'next/link';
 import clsx from 'clsx';
@@ -28,6 +28,10 @@ export default function BlogEditor({ initialData, isEditing = false }: BlogEdito
     const [loading, setLoading] = useState(false);
     const [saving, setSaving] = useState(false);
     const [isPreview, setIsPreview] = useState(false);
+    const [uploadingImage, setUploadingImage] = useState(false);
+    const [isAddingCategory, setIsAddingCategory] = useState(false);
+    const [newCategoryName, setNewCategoryName] = useState('');
+    const [creatingCategory, setCreatingCategory] = useState(false);
 
     // Form State
     const [formData, setFormData] = useState({
@@ -80,6 +84,60 @@ export default function BlogEditor({ initialData, isEditing = false }: BlogEdito
             slug: isEditing ? prev.slug : generateSlug(title),
             metaTitle: isEditing ? prev.metaTitle : title.slice(0, 60),
         }));
+    };
+
+    const handleImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+        const file = e.target.files?.[0];
+        if (!file) return;
+
+        setUploadingImage(true);
+        const uploadData = new FormData();
+        uploadData.append('file', file);
+
+        try {
+            const res = await fetch('/api/admin/upload', {
+                method: 'POST',
+                body: uploadData,
+            });
+
+            if (res.ok) {
+                const data = await res.json();
+                setFormData({ ...formData, featuredImageUrl: data.url });
+            } else {
+                alert('Image upload failed');
+            }
+        } catch (error) {
+            console.error('Upload error:', error);
+            alert('An error occurred during upload');
+        } finally {
+            setUploadingImage(false);
+            e.target.value = ''; // Reset input
+        }
+    };
+
+    const handleCreateCategory = async () => {
+        if (!newCategoryName.trim()) return;
+        setCreatingCategory(true);
+        try {
+            const res = await fetch('/api/blog-categories', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ name: newCategoryName.trim() }),
+            });
+            if (res.ok) {
+                const newCat = await res.json();
+                setCategories([...categories, newCat]);
+                setFormData({ ...formData, categoryId: newCat.id.toString() });
+                setIsAddingCategory(false);
+                setNewCategoryName('');
+            } else {
+                alert('Failed to create category');
+            }
+        } catch (error) {
+            console.error('Category creation error:', error);
+        } finally {
+            setCreatingCategory(false);
+        }
     };
 
     // SEO Analysis
@@ -349,15 +407,52 @@ export default function BlogEditor({ initialData, isEditing = false }: BlogEdito
 
                         <div className="space-y-2">
                             <label className="text-sm font-semibold text-gray-700">Category</label>
-                            <select
-                                value={formData.categoryId}
-                                onChange={(e) => setFormData({ ...formData, categoryId: e.target.value })}
-                                className="w-full bg-gray-50/50 rounded-xl px-4 py-2.5 text-sm border"
-                                required
-                            >
-                                <option value="">Select Category</option>
-                                {categories.map(c => <option key={c.id} value={c.id}>{c.name}</option>)}
-                            </select>
+                            {isAddingCategory ? (
+                                <div className="flex items-center gap-2">
+                                    <input
+                                        type="text"
+                                        value={newCategoryName}
+                                        onChange={(e) => setNewCategoryName(e.target.value)}
+                                        placeholder="New Category Name"
+                                        className="w-full bg-gray-50/50 rounded-xl px-4 py-2.5 text-sm border focus:bg-white"
+                                        disabled={creatingCategory}
+                                    />
+                                    <button
+                                        type="button"
+                                        onClick={handleCreateCategory}
+                                        disabled={creatingCategory || !newCategoryName.trim()}
+                                        className="px-3 py-2.5 bg-blue-600 text-white rounded-xl text-sm font-medium hover:bg-blue-700 disabled:opacity-50 whitespace-nowrap"
+                                    >
+                                        {creatingCategory ? 'Saving...' : 'Save'}
+                                    </button>
+                                    <button
+                                        type="button"
+                                        onClick={() => { setIsAddingCategory(false); setNewCategoryName(''); }}
+                                        className="px-3 py-2.5 bg-gray-100 text-gray-600 rounded-xl hover:bg-gray-200"
+                                    >
+                                        <X size={18} />
+                                    </button>
+                                </div>
+                            ) : (
+                                <div className="flex items-center gap-2">
+                                    <select
+                                        value={formData.categoryId}
+                                        onChange={(e) => setFormData({ ...formData, categoryId: e.target.value })}
+                                        className="w-full bg-gray-50/50 rounded-xl px-4 py-2.5 text-sm border focus:bg-white"
+                                        required
+                                    >
+                                        <option value="">Select Category</option>
+                                        {categories.map(c => <option key={c.id} value={c.id}>{c.name}</option>)}
+                                    </select>
+                                    <button
+                                        type="button"
+                                        onClick={() => setIsAddingCategory(true)}
+                                        className="px-3 py-2.5 bg-blue-50 text-blue-600 font-medium rounded-xl hover:bg-blue-100 text-sm whitespace-nowrap"
+                                    >
+                                        + New
+                                    </button>
+                                </div>
+                            )}
                         </div>
 
                         <div className="space-y-2">
@@ -372,29 +467,47 @@ export default function BlogEditor({ initialData, isEditing = false }: BlogEdito
                     {/* Featured Image */}
                     <div className="bg-white rounded-2xl p-6 shadow-sm border border-gray-100 space-y-4">
                         <label className="text-sm font-semibold text-gray-700 block">Featured Image</label>
-                        <div className="aspect-video bg-gray-50 rounded-xl border border-dashed border-gray-300 flex flex-col items-center justify-center overflow-hidden relative group">
-                            {formData.featuredImageUrl ? (
-                                <>
-                                    <img src={formData.featuredImageUrl} alt="" className="w-full h-full object-cover" />
-                                    <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
-                                        <button onClick={() => setFormData({ ...formData, featuredImageUrl: '' })} className="text-white bg-red-500/80 p-2 rounded-full">
-                                            <Trash2 size={20} />
-                                        </button>
+                        <div className="relative">
+                            <input
+                                type="file"
+                                id="blog-image-upload"
+                                accept="image/*"
+                                onChange={handleImageUpload}
+                                className="hidden"
+                            />
+                            <div className={clsx("aspect-video bg-gray-50 rounded-xl border border-dashed border-gray-300 flex flex-col items-center justify-center overflow-hidden relative group", !formData.featuredImageUrl && "cursor-pointer hover:bg-gray-100 transition-colors")} onClick={() => !formData.featuredImageUrl && document.getElementById('blog-image-upload')?.click()}>
+                                {uploadingImage ? (
+                                    <div className="text-center p-4">
+                                        <RefreshCw className="mx-auto text-blue-500 animate-spin mb-2" size={32} />
+                                        <p className="text-xs text-gray-500 font-medium">Uploading...</p>
                                     </div>
-                                </>
-                            ) : (
-                                <div className="text-center p-4">
-                                    <ImageIcon className="mx-auto text-gray-400 mb-2" size={32} />
-                                    <p className="text-xs text-gray-500">Paste an image URL below</p>
-                                </div>
-                            )}
+                                ) : formData.featuredImageUrl ? (
+                                    <>
+                                        <img src={formData.featuredImageUrl} alt="" className="w-full h-full object-cover" />
+                                        <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
+                                            <button type="button" onClick={() => setFormData({ ...formData, featuredImageUrl: '' })} className="text-white bg-red-500/80 p-2 rounded-full transform hover:scale-110 transition-transform">
+                                                <Trash2 size={20} />
+                                            </button>
+                                        </div>
+                                    </>
+                                ) : (
+                                    <div className="text-center p-4">
+                                        <ImageIcon className="mx-auto text-gray-400 mb-2 group-hover:text-blue-500 transition-colors" size={32} />
+                                        <p className="text-sm font-medium text-gray-700">Click to upload image</p>
+                                        <p className="text-xs text-gray-500 mt-1">or paste a URL below</p>
+                                    </div>
+                                )}
+                            </div>
+                        </div>
+                        <div className="flex items-center gap-2">
+                            <span className="text-xs text-gray-400 uppercase font-bold tracking-wider">OR</span>
                         </div>
                         <input
                             type="text"
-                            placeholder="Image URL..."
+                            placeholder="Paste image URL here..."
                             value={formData.featuredImageUrl}
                             onChange={(e) => setFormData({ ...formData, featuredImageUrl: e.target.value })}
-                            className="w-full text-xs bg-gray-50 rounded-lg px-3 py-2 border"
+                            className="w-full text-sm bg-gray-50 rounded-lg px-3 py-2 border focus:bg-white"
                         />
                     </div>
                 </div>

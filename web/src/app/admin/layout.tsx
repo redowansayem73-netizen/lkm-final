@@ -14,9 +14,12 @@ import {
     Calendar,
     Users,
     CreditCard,
+    DollarSign,
     ChevronRight,
     Tag,
-    Truck
+    Truck,
+    Wrench,
+    Menu as MenuIcon
 } from "lucide-react";
 import clsx from "clsx";
 
@@ -25,10 +28,13 @@ const navigation = [
     { name: 'Products', href: '/admin/products', icon: ShoppingBag },
     { name: 'Categories', href: '/admin/categories', icon: Layers },
     { name: 'Brands', href: '/admin/brands', icon: Tag },
+    { name: 'Services', href: '/admin/services', icon: Wrench },
     { name: 'Orders', href: '/admin/orders', icon: ShoppingCart },
     { name: 'Shipping', href: '/admin/shipping', icon: Truck },
     { name: 'Bookings', href: '/admin/bookings', icon: Calendar },
-    { name: 'Blogs', href: '/admin/blogs', icon: Layers }, // Using Layers for now, or something related
+    { name: 'Repairs Quotes', href: '/admin/repairs-quotes', icon: DollarSign },
+    { name: 'Blogs', href: '/admin/blogs', icon: Layers },
+    { name: 'Menu Management', href: '/admin/menu', icon: MenuIcon },
     { name: 'Customers', href: '/admin/customers', icon: Users },
     { name: 'Payments', href: '/admin/payments', icon: CreditCard },
     { name: 'Settings', href: '/admin/settings', icon: Settings },

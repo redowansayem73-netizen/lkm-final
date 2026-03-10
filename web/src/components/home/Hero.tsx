@@ -3,107 +3,117 @@
 import Link from 'next/link';
 import QuickQuote from './QuickQuote';
 import { motion } from 'framer-motion';
+import { CalendarDays, ShieldCheck, Clock } from 'lucide-react';
 
 export default function Hero() {
     return (
-        <section className="relative w-full min-h-[85vh] flex items-center bg-brand-blue overflow-hidden font-poppins">
-            {/* Background Image Layer */}
+        <section className="hero-section relative w-full bg-white overflow-hidden">
+            {/* Subtle top accent line */}
+            <div className="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-[#265795] via-[#ecde2e] to-[#265795]" />
+
             <div
-                className="absolute inset-0 z-0 bg-cover bg-center bg-no-repeat opacity-20"
-                style={{
-                    backgroundImage: 'url("/hero-bg.jpg")', // Reverted to standard image if known, or keeping generic but low opacity
-                }}
-            />
+                className="container mx-auto px-5 sm:px-6 lg:px-10 xl:px-16 w-full pt-[130px] lg:pt-[160px] xl:pt-[190px] pb-[40px] lg:pb-[80px]"
+            >
+                <div className="flex flex-col lg:flex-row items-start lg:items-center justify-between gap-8 lg:gap-14 xl:gap-20 w-full max-w-[1320px] mx-auto">
 
-            {/* Gradient Overlay */}
-            <div className="absolute inset-0 z-0 bg-gradient-to-r from-brand-blue via-brand-blue/90 to-brand-blue/80" />
+                    {/* ── LEFT: Text + Form (stacked on mobile) ── */}
+                    <div className="w-full lg:w-[55%] flex flex-col items-center lg:items-start text-center lg:text-left">
 
-            {/* Animated particles or subtle overlay effects could go here */}
-
-            <div className="container mx-auto px-4 relative z-10 pt-32 pb-24 md:py-32">
-                <div className="flex flex-col lg:flex-row items-center justify-between gap-12 lg:gap-20">
-
-                    {/* Left Content */}
-                    <div className="w-full lg:w-1/2 text-white text-center lg:text-left space-y-8">
+                        {/* Badge */}
                         <motion.div
-                            initial={{ opacity: 0, y: 20 }}
+                            initial={{ opacity: 0, y: 12 }}
                             animate={{ opacity: 1, y: 0 }}
-                            transition={{ duration: 0.6 }}
+                            transition={{ duration: 0.5 }}
+                            className="inline-flex items-center gap-1.5 bg-[#265795]/[0.06] border border-[#265795]/15 text-[#265795] px-4 py-1.5 rounded-full mb-4"
                         >
-                            <span className="inline-block py-1 px-3 rounded-full bg-brand-yellow text-brand-blue border border-brand-yellow text-sm font-bold tracking-wider mb-4">
-                                #1 RATED REPAIR SERVICE IN LAKEMBA
+                            <span className="text-base leading-none">👑</span>
+                            <span className="text-[10px] sm:text-[11px] font-bold tracking-[0.12em] uppercase" style={{ fontFamily: 'var(--font-outfit)' }}>
+                                #1 Rated Mobile Repair Shop — Lakemba, NSW
                             </span>
-                            <h1 className="text-5xl md:text-6xl lg:text-7xl font-bold leading-tight tracking-tight text-white">
-                                Expert Repairs <br />
-                                <span className="text-brand-yellow">
-                                    Instant Solutions
-                                </span>
-                            </h1>
                         </motion.div>
 
-                        {/* Mobile Form - Visible just after title on mobile */}
-                        <div className="lg:hidden w-full max-w-md mx-auto mb-8">
-                            <QuickQuote />
-                        </div>
-
-                        <motion.p
-                            initial={{ opacity: 0, y: 20 }}
+                        {/* Headline */}
+                        <motion.h1
+                            initial={{ opacity: 0, y: 18 }}
                             animate={{ opacity: 1, y: 0 }}
-                            transition={{ duration: 0.6, delay: 0.2 }}
-                            className="text-lg md:text-xl text-blue-100 max-w-2xl mx-auto lg:mx-0 leading-relaxed font-medium"
+                            transition={{ duration: 0.55, delay: 0.08 }}
+                            className="font-extrabold text-[#1a1a2e] leading-[1.08] tracking-tight mb-5 lg:mb-6"
+                            style={{
+                                fontSize: 'clamp(2rem, 5.5vw, 3.6rem)',
+                                fontFamily: 'var(--font-outfit)',
+                            }}
                         >
-                            We bring your devices back to life. Professional mobile, tablet, and laptop repairs with premium parts and warranty you can trust.
-                        </motion.p>
+                            Expert Phone Repair{' '}
+                            <span className="text-[#265795]">Services</span>
+                        </motion.h1>
 
+                        {/* ── MOBILE: Inline form ── */}
                         <motion.div
-                            initial={{ opacity: 0, y: 20 }}
+                            initial={{ opacity: 0, y: 18 }}
                             animate={{ opacity: 1, y: 0 }}
-                            transition={{ duration: 0.6, delay: 0.4 }}
-                            className="flex flex-col sm:flex-row items-center justify-center lg:justify-start gap-4"
+                            transition={{ duration: 0.5, delay: 0.15 }}
+                            className="w-full lg:hidden"
                         >
-                            <Link
-                                href="/shop"
-                                className="w-full sm:w-auto px-8 py-4 bg-brand-yellow text-brand-blue rounded-xl font-bold hover:bg-white hover:scale-105 transition-all duration-300 shadow-lg flex items-center justify-center gap-2"
-                            >
-                                Shop Accessories
-                            </Link>
-                            <Link
-                                href="/contact"
-                                className="w-full sm:w-auto px-8 py-4 bg-transparent border-2 border-white text-white rounded-xl font-bold hover:bg-white hover:text-brand-blue transition-all duration-300 flex items-center justify-center"
-                            >
-                                Locate Store
-                            </Link>
+                            <QuickQuote variant="light" />
                         </motion.div>
 
+                        {/* ── MOBILE + DESKTOP: Trust row ── */}
                         <motion.div
                             initial={{ opacity: 0 }}
                             animate={{ opacity: 1 }}
-                            transition={{ duration: 0.8, delay: 0.6 }}
-                            className="pt-8 flex flex-wrap items-center justify-center lg:justify-start gap-6 text-sm font-medium text-blue-100"
+                            transition={{ duration: 0.6, delay: 0.35 }}
+                            className="flex flex-wrap items-center justify-center lg:justify-start gap-x-6 gap-y-3 mt-6 lg:mt-0 w-full"
                         >
-                            <div className="flex items-center gap-2 bg-blue-900/40 px-3 py-1.5 rounded-lg border border-blue-400/30">
-                                <span className="w-2 h-2 rounded-full bg-green-400 animate-pulse"></span>
-                                Open 7 Days
-                            </div>
-                            <div className="flex items-center gap-2 bg-blue-900/40 px-3 py-1.5 rounded-lg border border-blue-400/30">
-                                <span className="w-2 h-2 rounded-full bg-blue-400"></span>
-                                6 Months Warranty
-                            </div>
-                            <div className="flex items-center gap-2 bg-blue-900/40 px-3 py-1.5 rounded-lg border border-blue-400/30">
-                                <span className="w-2 h-2 rounded-full bg-purple-400"></span>
-                                30 Min Repairs
-                            </div>
+                            {[
+                                { icon: CalendarDays, label: 'Open 7 Days', color: '#265795' },
+                                { icon: ShieldCheck, label: 'Service Warranty', color: '#265795' },
+                                { icon: Clock, label: '30 Min Repairs', color: '#ecde2e' },
+                            ].map((b, i) => (
+                                <div key={i} className="flex items-center gap-2">
+                                    <div className="w-7 h-7 rounded-full flex items-center justify-center bg-[#265795]/[0.07]">
+                                        <b.icon className="w-3.5 h-3.5" style={{ color: b.color }} />
+                                    </div>
+                                    <span className="text-[12px] sm:text-[13px] font-semibold text-gray-600 tracking-wide">{b.label}</span>
+                                </div>
+                            ))}
+                        </motion.div>
+
+                        {/* Desktop subtext below trust */}
+                        <motion.p
+                            initial={{ opacity: 0, y: 15 }}
+                            animate={{ opacity: 1, y: 0 }}
+                            transition={{ duration: 0.6, delay: 0.28 }}
+                            className="hidden lg:block text-gray-500 leading-relaxed max-w-[480px] mt-7 text-[15px]"
+                        >
+                            Lakemba&apos;s most trusted phone repair shop. We fix iPhones, Samsung, and all smartphones — <strong className="text-gray-700">fast, affordable, and backed by warranty.</strong>
+                        </motion.p>
+
+                        {/* CTA Buttons */}
+                        <motion.div
+                            initial={{ opacity: 0, y: 15 }}
+                            animate={{ opacity: 1, y: 0 }}
+                            transition={{ duration: 0.6, delay: 0.4 }}
+                            className="flex flex-col sm:flex-row gap-4 mt-8 w-full lg:w-auto"
+                        >
+                            <Link href="/shop" className="bg-[#e6d430] text-black font-bold py-3.5 px-8 rounded-xl hover:brightness-105 transition-all text-center shadow-[0_4px_14px_rgba(230,212,48,0.4)]">
+                                Shop Accessories
+                            </Link>
+                            <Link href="/services" className="bg-[#e6d430] text-black font-bold py-3.5 px-8 rounded-xl hover:brightness-105 transition-all text-center shadow-[0_4px_14px_rgba(230,212,48,0.4)]">
+                                Our Services
+                            </Link>
                         </motion.div>
                     </div>
 
-                    {/* Right Content - Quote Form */}
+                    {/* ── RIGHT: Desktop form ── */}
                     <motion.div
-                        initial={{ opacity: 0, x: 50 }}
-                        animate={{ opacity: 1, x: 0 }}
-                        transition={{ duration: 0.8, delay: 0.4 }}
-                        className="hidden lg:block w-full lg:w-1/2 max-w-md"
+                        initial={{ opacity: 0, y: 24 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        transition={{ duration: 0.6, delay: 0.2 }}
+                        className="hidden lg:flex w-full lg:w-[43%] xl:w-[42%] justify-center lg:justify-end"
                     >
-                        <QuickQuote />
+                        <div className="w-full max-w-[440px]">
+                            <QuickQuote variant="light" />
+                        </div>
                     </motion.div>
 
                 </div>

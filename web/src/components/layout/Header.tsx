@@ -5,7 +5,7 @@ import { Search, ShoppingCart, Menu, Phone, ChevronDown, X, Facebook, Instagram 
 import { useState, useRef, useEffect } from "react";
 import { usePathname, useRouter } from "next/navigation";
 import brandsData from "@/data/brands.json";
-import servicesData from "@/data/services.json";
+
 import { useCart } from "@/context/CartContext";
 import clsx from "clsx";
 
@@ -80,22 +80,16 @@ export default function Header({ className = '' }: { className?: string }) {
     };
 
 
-    // Header transparency logic
-    // Transparent only on Home, when at top.
-    // Otherwise white.
-    const isTransparent = isHome && !isScrolled;
+    // Header transparency logic - Disabled per user request for solid colored header
+    const isTransparent = false;
 
     return (
         <header className={clsx(
             className,
             "fixed w-full z-50 transition-all duration-300"
         )}>
-            {/* Top Bar - Always standard colors but maybe transparent bg if desired? Usually distinct. Keeping blue per request/design consistency but can be integrated.
-               User request: "need transparent header in hero section". Usually implies the NAV bar. Top bar sits above.
-               If Top bar exists, it pushes nav down.
-               Let's make Top Bar bg-brand-blue but Nav Bar transparent.
-            */}
-            <div className="bg-brand-blue text-white py-2 text-xs md:text-sm relative z-50 border-b border-brand-blue/10">
+            {/* Top Bar - #265795 Blue bg */}
+            <div className="bg-[#265795] text-white py-2 text-xs md:text-sm relative z-50 border-b border-[#265795]/10 flex flex-col justify-center">
                 <div className="container mx-auto px-4 flex justify-between items-center">
                     {/* Left: Phone & Open Info */}
                     <div className="flex items-center gap-4 md:gap-6">
@@ -120,45 +114,38 @@ export default function Header({ className = '' }: { className?: string }) {
                         <a href="https://tiktok.com" target="_blank" rel="noopener noreferrer" className="hover:text-brand-yellow transition">
                             <TikTok className="h-4 w-4" />
                         </a>
-                        <Link href="/admin/login" className="hidden md:ml-4 md:inline-block hover:text-brand-yellow transition opacity-80 text-xs">Admin</Link>
                     </div>
                 </div>
             </div>
 
-            {/* Main Navigation */}
-            <div className={clsx(
-                "w-full transition-all duration-300 border-b",
-                isTransparent
-                    ? "bg-transparent border-transparent py-4 backdrop-blur-sm"
-                    : "bg-white/95 backdrop-blur-md border-gray-100 py-3 shadow-sm"
-            )}>
+            {/* Main Navigation - White bg, Black text */}
+            <div className="w-full transition-all duration-300 border-b bg-white py-3 shadow-sm">
                 <div className="container mx-auto px-4">
                     <div className="flex items-center justify-between">
                         {/* Logo */}
-                        <Link href="/" className="flex items-center group">
-                            <div className="flex flex-col">
-                                <span className={clsx(
-                                    "text-2xl font-bold uppercase leading-none transition-colors",
-                                    isTransparent ? "text-white" : "text-brand-blue"
-                                )}>
-                                    Lakemba
-                                </span>
-                                <span className="text-sm font-bold text-brand-yellow uppercase tracking-widest leading-none">Mobile King</span>
+                        <Link href="/" className="flex items-center gap-2.5 group text-black">
+                            <div className="rounded-full flex-shrink-0 transition-all duration-300 group-hover:scale-105 ring-2 ring-brand-yellow/30 shadow-[0_2px_12px_rgba(30,58,138,0.15)]">
+                                <img
+                                    src="/lakemba-logo.png"
+                                    alt="Lakemba Mobile King"
+                                    className="h-12 w-12 sm:h-[52px] sm:w-[52px] rounded-full object-cover block"
+                                />
+                            </div>
+                            <div className="flex flex-col leading-none">
+                                <span className="text-base sm:text-lg font-extrabold uppercase tracking-wide text-black transition-colors group-hover:text-[#265795]">Lakemba</span>
+                                <span className="text-[11px] sm:text-xs font-black text-brand-yellow uppercase tracking-widest">Mobile King</span>
                             </div>
                         </Link>
 
                         {/* Desktop Navigation */}
-                        <nav className={clsx(
-                            "hidden lg:flex items-center space-x-8 font-medium transition-colors",
-                            isTransparent ? "text-white/90" : "text-gray-700"
-                        )}>
+                        <nav className="hidden lg:flex items-center space-x-8 font-medium transition-colors text-black">
                             {isShopPage ? (
                                 <>
-                                    <Link href="/shop" className="hover:text-brand-yellow font-bold transition">All Products</Link>
+                                    <Link href="/shop" className="hover:text-[#265795] font-bold transition">All Products</Link>
 
                                     {/* Dynamic Shop Categories Dropdown */}
                                     <div className="group relative">
-                                        <button className="flex items-center py-2 hover:text-brand-yellow focus:outline-none transition gap-1">
+                                        <button className="flex items-center py-2 hover:text-[#265795] focus:outline-none transition gap-1">
                                             Categories <ChevronDown className="h-4 w-4 transform group-hover:-rotate-180 transition-transform duration-300" />
                                         </button>
                                         <div className="absolute top-full left-0 pt-4 opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-300 transform translate-y-2 group-hover:translate-y-0 w-64 z-50">
@@ -166,7 +153,7 @@ export default function Header({ className = '' }: { className?: string }) {
                                                 <ul className="space-y-1 max-h-[60vh] overflow-y-auto pr-2">
                                                     {shopCategories.length > 0 ? shopCategories.map((cat: any) => (
                                                         <li key={cat.id}>
-                                                            <Link href={`/shop?category=${cat.slug}`} className="block px-3 py-2 rounded-lg hover:bg-gray-50 hover:text-brand-blue hover:translate-x-1 transition-all truncate text-sm">
+                                                            <Link href={`/shop?category=${cat.slug}`} className="block px-3 py-2 rounded-lg hover:bg-gray-50 hover:text-[#265795] hover:translate-x-1 transition-all truncate text-sm">
                                                                 {cat.name}
                                                             </Link>
                                                         </li>
@@ -180,7 +167,7 @@ export default function Header({ className = '' }: { className?: string }) {
 
                                     {/* Dynamic Shop Brands Dropdown */}
                                     <div className="group relative">
-                                        <button className="flex items-center py-2 hover:text-brand-yellow focus:outline-none transition gap-1">
+                                        <button className="flex items-center py-2 hover:text-[#265795] focus:outline-none transition gap-1">
                                             Brands <ChevronDown className="h-4 w-4 transform group-hover:-rotate-180 transition-transform duration-300" />
                                         </button>
                                         <div className="absolute top-full left-0 pt-4 opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-300 transform translate-y-2 group-hover:translate-y-0 w-56 z-50">
@@ -192,7 +179,7 @@ export default function Header({ className = '' }: { className?: string }) {
                                                         const bCount = brandInfo.count || brandInfo.productsCount || 0;
                                                         return (
                                                             <li key={bName + '-' + idx}>
-                                                                <Link href={`/shop?brand=${encodeURIComponent(bName)}`} className="flex justify-between items-center px-3 py-2 rounded-lg hover:bg-gray-50 hover:text-brand-blue hover:translate-x-1 transition-all text-sm">
+                                                                <Link href={`/shop?brand=${encodeURIComponent(bName)}`} className="flex justify-between items-center px-3 py-2 rounded-lg hover:bg-gray-50 hover:text-[#265795] hover:translate-x-1 transition-all text-sm">
                                                                     <span className="truncate">{bName}</span>
                                                                     <span className="text-xs bg-gray-100 text-gray-500 py-0.5 px-2 rounded-full font-medium">{bCount}</span>
                                                                 </Link>
@@ -206,15 +193,15 @@ export default function Header({ className = '' }: { className?: string }) {
                                         </div>
                                     </div>
 
-                                    <Link href="/shop?sort=new" className="hover:text-brand-yellow font-bold transition">New Arrivals</Link>
+                                    <Link href="/shop?sort=new" className="hover:text-[#265795] font-bold transition">New Arrivals</Link>
                                 </>
                             ) : (
                                 <>
-                                    <Link href="/services" className="hover:text-brand-yellow transition">Services</Link>
+                                    <Link href="/services" className="hover:text-[#265795] transition">Repair Services</Link>
 
-                                    {/* Original Brands Dropdown */}
+                                    {/* Brands Dropdown */}
                                     <div className="group relative">
-                                        <button className="flex items-center py-2 hover:text-brand-yellow focus:outline-none transition gap-1">
+                                        <button className="flex items-center py-2 hover:text-[#265795] focus:outline-none transition gap-1">
                                             Brands <ChevronDown className="h-4 w-4" />
                                         </button>
                                         <div className="absolute top-full left-0 pt-4 opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200 transform origin-top w-56">
@@ -222,7 +209,7 @@ export default function Header({ className = '' }: { className?: string }) {
                                                 <ul className="space-y-2">
                                                     {brandsData.map((brand) => (
                                                         <li key={brand.id}>
-                                                            <Link href={`/brands/${brand.slug}`} className="block hover:text-brand-blue hover:translate-x-1 transition-transform">
+                                                            <Link href={`/brands/${brand.slug}`} className="block hover:text-[#265795] hover:translate-x-1 transition-transform">
                                                                 {brand.name} Repairs
                                                             </Link>
                                                         </li>
@@ -232,30 +219,9 @@ export default function Header({ className = '' }: { className?: string }) {
                                         </div>
                                     </div>
 
-                                    {/* Original Repair Mega Menu */}
-                                    <div className="group relative">
-                                        <button className="flex items-center py-2 hover:text-brand-yellow focus:outline-none transition gap-1">
-                                            Repair <ChevronDown className="h-4 w-4" />
-                                        </button>
-                                        <div className="absolute top-full left-1/2 -translate-x-1/2 pt-4 opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200 transform origin-top w-[300px]">
-                                            <div className="bg-white rounded-xl shadow-2xl border border-gray-100 p-6 text-gray-800">
-                                                <h3 className="text-sm font-bold text-gray-400 uppercase tracking-wider mb-4 border-b pb-2">Services</h3>
-                                                <ul className="space-y-2">
-                                                    {servicesData.map((service) => (
-                                                        <li key={service.id}>
-                                                            <Link href={`/services/${service.slug}`} className="block hover:text-brand-blue hover:translate-x-1 transition-transform">
-                                                                {service.title}
-                                                            </Link>
-                                                        </li>
-                                                    ))}
-                                                </ul>
-                                            </div>
-                                        </div>
-                                    </div>
-
-                                    <Link href="/about" className="hover:text-brand-yellow transition">About Us</Link>
-                                    <Link href="/blog" className="hover:text-brand-yellow transition">Blog</Link>
-                                    <Link href="/contact" className="hover:text-brand-yellow transition">Contact Us</Link>
+                                    <Link href="/about" className="hover:text-[#265795] transition">About Us</Link>
+                                    <Link href="/blog" className="hover:text-[#265795] transition">Blog</Link>
+                                    <Link href="/contact" className="hover:text-[#265795] transition">Contact Us</Link>
                                 </>
                             )}
                         </nav>
@@ -279,12 +245,12 @@ export default function Header({ className = '' }: { className?: string }) {
                                         )}
                                     />
                                     <button onClick={handleSearch} className="absolute right-3 top-2">
-                                        <Search className={clsx("h-4 w-4", isTransparent ? "text-white/60" : "text-gray-400")} />
+                                        <Search className="h-4 w-4 text-gray-900" />
                                     </button>
                                 </div>
                             )}
 
-                            <Link href="/cart" className={clsx("relative hover:text-brand-yellow transition", isTransparent ? "text-white" : "text-gray-700")}>
+                            <Link href="/cart" className="relative hover:text-[#265795] transition text-black">
                                 <ShoppingCart className="h-6 w-6" />
                                 {cartItemCount > 0 && (
                                     <span className="absolute -top-2 -right-2 bg-brand-yellow text-brand-blue text-xs font-bold rounded-full h-5 w-5 flex items-center justify-center">
@@ -304,7 +270,7 @@ export default function Header({ className = '' }: { className?: string }) {
 
                             {/* Mobile Menu Button */}
                             <button
-                                className={clsx("lg:hidden p-1 transition-colors", isTransparent ? "text-white" : "text-gray-700")}
+                                className="lg:hidden p-1 transition-colors text-black"
                                 onClick={toggleMenu}
                             >
                                 {isMenuOpen ? <X className="h-7 w-7" /> : <Menu className="h-7 w-7" />}
@@ -401,7 +367,7 @@ export default function Header({ className = '' }: { className?: string }) {
                                 <div>
                                     <button
                                         onClick={() => setIsBrandsOpen(!isBrandsOpen)}
-                                        className="flex items-center justify-between w-full py-3 text-lg text-gray-800 border-b border-gray-100"
+                                        className="flex items-center justify-between w-full py-3 text-lg text-black border-b border-gray-100"
                                     >
                                         Brands <ChevronDown className={`h-5 w-5 transition-transform ${isBrandsOpen ? 'rotate-180' : ''}`} />
                                     </button>
@@ -409,7 +375,7 @@ export default function Header({ className = '' }: { className?: string }) {
                                         <ul className="space-y-3">
                                             {brandsData.map((brand) => (
                                                 <li key={brand.id}>
-                                                    <Link href={`/brands/${brand.slug}`} className="block text-gray-600" onClick={toggleMenu}>
+                                                    <Link href={`/brands/${brand.slug}`} className="block text-gray-700 hover:text-[#265795]" onClick={toggleMenu}>
                                                         {brand.name} Repairs
                                                     </Link>
                                                 </li>
@@ -418,36 +384,20 @@ export default function Header({ className = '' }: { className?: string }) {
                                     </div>
                                 </div>
 
-                                <div>
-                                    <button
-                                        onClick={() => setIsRepairOpen(!isRepairOpen)}
-                                        className="flex items-center justify-between w-full py-3 text-lg text-gray-800 border-b border-gray-100"
-                                    >
-                                        Services <ChevronDown className={`h-5 w-5 transition-transform ${isRepairOpen ? 'rotate-180' : ''}`} />
-                                    </button>
-                                    <div className={`pl-4 bg-gray-50 rounded-b-lg space-y-3 overflow-hidden transition-all duration-300 ${isRepairOpen ? 'max-h-[400px] py-4' : 'max-h-0'}`}>
-                                        <ul className="space-y-3">
-                                            {servicesData.map((service) => (
-                                                <li key={service.id}>
-                                                    <Link href={`/services/${service.slug}`} className="block text-gray-600" onClick={toggleMenu}>
-                                                        {service.title}
-                                                    </Link>
-                                                </li>
-                                            ))}
-                                        </ul>
-                                    </div>
-                                </div>
+                                <Link href="/services" className="block py-3 text-lg text-black border-b border-gray-100 font-medium" onClick={toggleMenu}>
+                                    Repair Services
+                                </Link>
 
-                                <Link href="/about" className="block py-3 text-lg text-gray-800 border-b border-gray-100" onClick={toggleMenu}>
+                                <Link href="/about" className="block py-3 text-lg text-black border-b border-gray-100 font-medium" onClick={toggleMenu}>
                                     About Us
                                 </Link>
-                                <Link href="/blog" className="block py-3 text-lg text-gray-800 border-b border-gray-100" onClick={toggleMenu}>
+                                <Link href="/blog" className="block py-3 text-lg text-black border-b border-gray-100 font-medium" onClick={toggleMenu}>
                                     Blog
                                 </Link>
-                                <Link href="/contact" className="block py-3 text-lg text-gray-800 border-b border-gray-100" onClick={toggleMenu}>
+                                <Link href="/contact" className="block py-3 text-lg text-black border-b border-gray-100 font-medium" onClick={toggleMenu}>
                                     Contact Us
                                 </Link>
-                                <Link href="/shop" className="block py-3 text-lg text-brand-blue" onClick={toggleMenu}>
+                                <Link href="/shop" className="block py-3 text-lg text-[#265795] font-bold" onClick={toggleMenu}>
                                     Online Store
                                 </Link>
                             </>

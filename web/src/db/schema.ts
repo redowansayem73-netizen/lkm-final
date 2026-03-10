@@ -188,7 +188,23 @@ export const bookings = mysqlTable('bookings', {
     customerPhone: varchar('customer_phone', { length: 20 }).notNull(),
     notes: text('notes'),
     status: varchar('status', { length: 50 }).default('pending'),
+    estDeliveryDate: varchar('est_delivery_date', { length: 50 }),
+    estDeliveryTime: varchar('est_delivery_time', { length: 50 }),
+    completionDate: varchar('completion_date', { length: 50 }),
+    completionTime: varchar('completion_time', { length: 50 }),
     createdAt: timestamp('created_at').defaultNow(),
+    updatedAt: timestamp('updated_at').defaultNow().onUpdateNow(),
+});
+
+export const repairQuotes = mysqlTable('repair_quotes', {
+    id: int('id').autoincrement().primaryKey(),
+    brand: varchar('brand', { length: 100 }).notNull(),
+    model: varchar('model', { length: 100 }).notNull(),
+    issue: varchar('issue', { length: 255 }).notNull(),
+    price: decimal('price', { precision: 10, scale: 2 }).notNull(),
+    time: varchar('time', { length: 100 }).notNull(),
+    createdAt: timestamp('created_at').defaultNow(),
+    updatedAt: timestamp('updated_at').defaultNow().onUpdateNow(),
 });
 
 export const brands = mysqlTable('brands', {
@@ -199,6 +215,21 @@ export const brands = mysqlTable('brands', {
     isPopular: boolean('is_popular').default(false),
     isActive: boolean('is_active').default(true),
     sortOrder: int('sort_order').default(0),
+
+    // Layout Fields
+    heroTitle: varchar('hero_title', { length: 255 }),
+    heroDescription: text('hero_description'),
+    heroImage: varchar('hero_image', { length: 512 }),
+    content: text('content'),
+    turnaroundTime: varchar('turnaround_time', { length: 255 }),
+    modelsList: text('models_list'), // JSON array string
+    faqData: text('faq_data'), // JSON array string
+
+    // SEO Fields
+    metaTitle: varchar('meta_title', { length: 255 }),
+    metaDescription: text('meta_description'),
+    focusKeyword: varchar('focus_keyword', { length: 100 }),
+
     createdAt: timestamp('created_at').defaultNow(),
     updatedAt: timestamp('updated_at').defaultNow().onUpdateNow(),
 });
@@ -404,3 +435,28 @@ export const blogPostTagsRelations = relations(blogPostTags, ({ one }) => ({
         references: [blogTags.id],
     }),
 }));
+
+// Services System
+export const services = mysqlTable('services', {
+    id: int('id').autoincrement().primaryKey(),
+    title: varchar('title', { length: 255 }).notNull(),
+    slug: varchar('slug', { length: 255 }).notNull().unique(),
+    icon: varchar('icon', { length: 100 }), // for lucide-react names
+
+    // Layout Fields
+    heroDescription: text('hero_description'),
+    heroImage: varchar('hero_image', { length: 512 }),
+    content: text('content'), // HTML or JSON
+    turnaroundTime: varchar('turnaround_time', { length: 255 }),
+    modelsList: text('models_list'), // JSON array string
+    faqData: text('faq_data'), // JSON array string of { q, a }
+
+    // SEO Fields
+    metaTitle: varchar('meta_title', { length: 255 }),
+    metaDescription: text('meta_description'),
+    focusKeyword: varchar('focus_keyword', { length: 100 }),
+
+    isActive: boolean('is_active').default(true),
+    createdAt: timestamp('created_at').defaultNow(),
+    updatedAt: timestamp('updated_at').defaultNow().onUpdateNow(),
+});
