@@ -1,56 +1,15 @@
 {
-  "name": "lkm-root",
+  "name": "lakemba-mobile-king-deployment",
   "version": "1.0.0",
   "private": true,
   "scripts": {
-    "build": "next build web",
-    "start": "node server.js",
-    "lint": "next lint web"
+    "install": "cd web && npm install",
+    "build": "cd web && npm run build",
+    "start": "node server.js"
   },
   "dependencies": {
-    "@floating-ui/dom": "^1.7.5",
-    "@stripe/react-stripe-js": "^5.4.1",
-    "@stripe/stripe-js": "^8.6.3",
-    "@tiptap/extension-color": "^3.18.0",
-    "@tiptap/extension-image": "^3.18.0",
-    "@tiptap/extension-link": "^3.18.0",
-    "@tiptap/extension-placeholder": "^3.18.0",
-    "@tiptap/extension-text-align": "^3.18.0",
-    "@tiptap/extension-text-style": "^3.18.0",
-    "@tiptap/extension-underline": "^3.18.0",
-    "@tiptap/pm": "^3.18.0",
-    "@tiptap/react": "^3.18.0",
-    "@tiptap/starter-kit": "^3.18.0",
-    "@types/bcrypt": "^6.0.0",
-    "@types/nodemailer": "^7.0.5",
-    "bcrypt": "^6.0.0",
-    "clsx": "^2.1.1",
-    "dotenv": "^17.2.3",
-    "drizzle-orm": "^0.45.1",
-    "express": "^5.2.1",
-    "framer-motion": "^12.26.2",
-    "lucide-react": "^0.562.0",
-    "mysql2": "^3.16.0",
-    "next": "15.1.0",
-    "next-auth": "^4.24.13",
-    "nodemailer": "^7.0.12",
-    "react": "19.0.0",
-    "react-dom": "19.0.0",
-    "recharts": "^3.6.0",
-    "stripe": "^20.2.0",
-    "tailwind-merge": "^3.4.0"
-  },
-  "devDependencies": {
-    "@tailwindcss/postcss": "^4",
-    "@types/node": "^20",
-    "@types/react": "^19",
-    "@types/react-dom": "^19",
-    "archiver": "^7.0.1",
-    "drizzle-kit": "^0.31.8",
-    "eslint": "^9",
-    "eslint-config-next": "15.1.0",
-    "opencode-ai": "^1.1.28",
-    "tailwindcss": "^4",
-    "typescript": "^5"
+    "dotenv": "^16.4.5",
+    "express": "^4.19.2",
+    "next": "15.1.0"
   }
 }
