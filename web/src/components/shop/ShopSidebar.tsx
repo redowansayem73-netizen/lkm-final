@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useMemo, useEffect } from 'react';
-import { ChevronDown, Search, Plus, Minus, X, DollarSign, Layers, Sparkles, Smartphone, Headset } from 'lucide-react';
+import { ChevronDown, Search, Plus, Minus, X, DollarSign, Layers, Sparkles, Smartphone, Headset, Package } from 'lucide-react';
 import clsx from 'clsx';
 import { motion, AnimatePresence } from 'framer-motion';
 
@@ -54,7 +54,7 @@ export default function ShopSidebar({
     hasActiveFilters = false,
 }: ShopSidebarProps) {
     const [searchQuery, setSearchQuery] = useState("");
-    const [showMore, setShowMore] = useState<Record<number, boolean>>({});
+    const [showMore, setShowMore] = useState<Record<string, boolean>>({});
     const [brandSearch, setBrandSearch] = useState("");
     const [expandedAccessoryTags, setExpandedAccessoryTags] = useState<Record<string, boolean>>({});
 
@@ -114,8 +114,8 @@ export default function ShopSidebar({
         }
     }, [priceRange]);
 
-    const toggleShowMore = (id: number) => {
-        setShowMore(prev => ({ ...prev, [id]: !prev[id] }));
+    const toggleShowMore = (key: string) => {
+        setShowMore(prev => ({ ...prev, [key]: !prev[key] }));
     };
 
     const toggleAccessoryExpand = (tagName: string, e: React.MouseEvent) => {
@@ -163,41 +163,94 @@ export default function ShopSidebar({
         onPriceRangeChange([min, max]);
     };
 
-    // Calculate grouped models representing the "Brands" in categories (iPhone, Samsung)
+    // Helper: Recursively find categories matching a test in the entire tree
+    const findInTree = (cats: Category[], test: (c: Category) => boolean): Category[] => {
+        const results: Category[] = [];
+        for (const cat of cats) {
+            if (test(cat)) results.push(cat);
+            if (cat.children) results.push(...findInTree(cat.children, test));
+        }
+        return results;
+    };
+
+    // ── BY MODELS: Find phone model parent categories and extract their children (the actual models) ──
     const groupedModels = useMemo(() => {
-        // Only consider roots that represent phone model families
-        const isModelRoot = (name: string) => /iphone|samsung|galaxy|pixel|oneplus|huawei|xiaomi|motorola|nokia|oppo|vivo/i.test(name);
-        
-        let matchingRoots = categories.filter(root => isModelRoot(root.name));
+        const isPhoneModelParent = (name: string) => /iphone|samsung|galaxy|pixel|oneplus|huawei|xiaomi|motorola|nokia|oppo|vivo/i.test(name);
+
+        // Search recursively through the whole tree for categories like "iPhone Accessories"
+        let modelParents = findInTree(categories, c => isPhoneModelParent(c.name) && (c.children || []).length > 0);
 
         if (searchQuery) {
             const q = searchQuery.toLowerCase();
-            matchingRoots = matchingRoots.map(root => {
-                const childMatches = (root.children || []).filter(c => c.name.toLowerCase().includes(q));
-                if (root.name.toLowerCase().includes(q) || childMatches.length > 0) {
-                    return { ...root, children: childMatches.length > 0 ? childMatches : root.children };
+            modelParents = modelParents.map(parent => {
+                const childMatches = (parent.children || []).filter(c => c.name.toLowerCase().includes(q));
+                if (parent.name.toLowerCase().includes(q) || childMatches.length > 0) {
+                    return { ...parent, children: childMatches.length > 0 ? childMatches : parent.children };
                 }
                 return null;
             }).filter(Boolean) as Category[];
         }
 
-        return matchingRoots.map(root => {
-            const name = root.name.replace(/Accessories/i, '').trim() || root.name;
-            const children = [...(root.children || [])].sort((a, b) => {
+        return modelParents.map(parent => {
+            const displayName = parent.name.replace(/Accessories/i, '').trim() || parent.name;
+            const sortedModels = [...(parent.children || [])].sort((a, b) => {
                 // Extract numbers to sort high to low (latest model first)
                 const numA = parseInt(a.name.replace(/\D/g, '')) || 0;
                 const numB = parseInt(b.name.replace(/\D/g, '')) || 0;
                 if (numA !== numB) return numB - numA;
-                // If numbers are the same, sort alphabetically
-                return a.name.localeCompare(b.name);
+                // Pro Max > Pro > Plus > Air > base, for same number
+                const variantOrder = (name: string) => {
+                    const lower = name.toLowerCase();
+                    if (lower.includes('pro max')) return 0;
+                    if (lower.includes('pro')) return 1;
+                    if (lower.includes('plus')) return 2;
+                    if (lower.includes('air')) return 3;
+                    if (lower.includes(' e') || lower.includes('16e')) return 5;
+                    return 4; // base model
+                };
+                return variantOrder(a.name) - variantOrder(b.name);
             });
             return {
-                ...root,
-                displayName: name,
-                sortedModels: children
+                ...parent,
+                displayName,
+                sortedModels
             };
         });
     }, [categories, searchQuery]);
+
+    // ── BY ACCESSORIES: Collect all category branches EXCEPT phone model ones ──
+    const accessoryCategories = useMemo(() => {
+        const isPhoneModelParent = (name: string) => /iphone|samsung|galaxy|pixel|oneplus|huawei|xiaomi|motorola|nokia|oppo|vivo/i.test(name);
+
+        // Collect all non-phone-model categories that are direct children of the root
+        const collectAccessories = (cats: Category[]): Category[] => {
+            const results: Category[] = [];
+            for (const cat of cats) {
+                if (isPhoneModelParent(cat.name)) continue; // Skip phone model branches
+                // If this is a container with children but no products itself (like "Accessories" root), recurse
+                if (cat.children && cat.children.length > 0) {
+                    // Check if any child is a phone model parent
+                    const nonModelChildren = cat.children.filter(c => !isPhoneModelParent(c.name));
+                    const modelChildren = cat.children.filter(c => isPhoneModelParent(c.name));
+                    
+                    if (nonModelChildren.length > 0 || modelChildren.length > 0) {
+                        // If it's a top-level generic container (like "Accessories"), flatten its non-model children
+                        if (cat.parentId === null) {
+                            results.push(...nonModelChildren);
+                        } else {
+                            results.push(cat);
+                        }
+                    }
+                } else if (cat.parentId !== null) {
+                    // Leaf category that's not the root
+                    results.push(cat);
+                }
+            }
+            return results;
+        };
+
+        return collectAccessories(categories);
+    }, [categories]);
 
     const filteredBrands = useMemo(() => {
         if (!filterData) return [];
@@ -266,7 +319,7 @@ export default function ShopSidebar({
                             className="overflow-hidden pb-4"
                         >
                             {/* Search Options optionally */}
-                            {categories.length > 5 && (
+                            {groupedModels.length > 0 && groupedModels.reduce((sum, g) => sum + g.sortedModels.length, 0) > 5 && (
                                 <div className="relative mb-3">
                                     <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-gray-400 pointer-events-none" />
                                     <input
@@ -287,7 +340,8 @@ export default function ShopSidebar({
                             <div className="space-y-4 pt-1">
                                 {groupedModels.map(group => {
                                     if (group.sortedModels.length === 0) return null;
-                                    const isShowingMore = showMore[group.id];
+                                    const showMoreKey = `model-${group.id}`;
+                                    const isShowingMore = showMore[showMoreKey];
                                     const LIMIT = 3;
                                     const visibleModels = isShowingMore ? group.sortedModels : group.sortedModels.slice(0, LIMIT);
                                     const hasMore = group.sortedModels.length > LIMIT;
@@ -315,7 +369,7 @@ export default function ShopSidebar({
                                             </div>
                                             {hasMore && (
                                                 <button
-                                                    onClick={() => toggleShowMore(group.id)}
+                                                    onClick={() => toggleShowMore(showMoreKey)}
                                                     className="flex items-center gap-1.5 mt-2.5 ml-1 text-xs font-bold text-brand-blue hover:text-blue-700 transition-colors"
                                                 >
                                                     {isShowingMore ? <><Minus className="w-3 h-3" /> Show less</> : <><Plus className="w-3 h-3" /> {group.sortedModels.length - LIMIT} more</>}
@@ -336,10 +390,10 @@ export default function ShopSidebar({
 
                 <div className="h-px bg-gray-100" />
 
-                {/* ── BY ACCESSORIES (ROW 2) ── */}
-                {filterData && filterData.tags.length > 0 && (
+                {/* ── BY ACCESSORIES (ROW 2) — Dynamic category list ── */}
+                {accessoryCategories.length > 0 && (
                     <>
-                        <SectionHeader icon={Headset} title="By Accessories" sectionKey="accessories" count={activeTags.length} />
+                        <SectionHeader icon={Package} title="By Accessories" sectionKey="accessories" count={activeCategories.filter(s => accessoryCategories.some(ac => ac.slug === s || (ac.children || []).some(ch => ch.slug === s))).length} />
                         <AnimatePresence initial={false}>
                             {expandedSections.accessories && (
                                 <motion.div
@@ -349,89 +403,83 @@ export default function ShopSidebar({
                                     transition={{ duration: 0.2 }}
                                     className="overflow-hidden pb-4"
                                 >
-                                    {/* Accessory Tags List */}
-                                    <div className="space-y-1.5 pt-1">
-                                        {/* Display top 15 accessories, add limit logic if there are more later */}
-                                        {filterData.tags.slice(0, 15).map(tag => {
-                                            const isActive = activeTags.includes(tag.name);
-                                            const isExpanded = expandedAccessoryTags[tag.name];
+                                    <div className="space-y-1 pt-1">
+                                        {accessoryCategories.map(accCat => {
+                                            const hasChildren = (accCat.children || []).length > 0;
+                                            const isExpanded = expandedAccessoryTags[accCat.slug];
+                                            const isActive = activeCategories.includes(accCat.slug);
+                                            // Check if any child is active
+                                            const activeChildCount = hasChildren ? (accCat.children || []).filter(ch => activeCategories.includes(ch.slug)).length : 0;
 
                                             return (
-                                                <div key={tag.name} className={clsx(
+                                                <div key={accCat.id} className={clsx(
                                                     "rounded-xl border transition-all overflow-hidden",
-                                                    isExpanded || isActive ? "border-blue-100 bg-blue-50/30" : "border-transparent hover:bg-gray-50"
+                                                    isExpanded || isActive || activeChildCount > 0 ? "border-blue-100 bg-blue-50/30" : "border-transparent hover:bg-gray-50"
                                                 )}>
-                                                    <div className="flex items-center p-2 group/tag">
-                                                        <label className="flex items-center gap-2.5 cursor-pointer flex-1 min-w-0">
+                                                    <div className="flex items-center p-2 group/acc">
+                                                        <label className="flex items-center gap-2.5 cursor-pointer flex-1 min-w-0"
+                                                            onClick={(e) => { e.preventDefault(); handleSelectCategory(accCat.slug); }}>
                                                             <div className={clsx(
                                                                 "w-4 h-4 rounded border flex items-center justify-center transition-colors flex-shrink-0",
-                                                                isActive ? "bg-brand-blue border-brand-blue" : "border-gray-300 bg-white group-hover/tag:border-brand-blue"
+                                                                isActive ? "bg-brand-blue border-brand-blue" : "border-gray-300 bg-white group-hover/acc:border-brand-blue"
                                                             )}>
                                                                 {isActive && <svg viewBox="0 0 14 14" fill="none" className="w-3 h-3 text-white"><path d="M3 7.5L5.5 10L11 4" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/></svg>}
                                                             </div>
                                                             <span className={clsx(
-                                                                "text-[13px] font-semibold capitalize truncate transition-colors",
-                                                                isActive ? "text-brand-blue" : "text-gray-700 group-hover/tag:text-gray-900"
+                                                                "text-[13px] font-semibold truncate transition-colors",
+                                                                isActive ? "text-brand-blue" : "text-gray-700 group-hover/acc:text-gray-900"
                                                             )}>
-                                                                {tag.name}
+                                                                {accCat.name}
                                                             </span>
-                                                            <span className="text-[10px] text-gray-400 font-bold bg-white border border-gray-100 px-1.5 rounded-full flex-shrink-0">
-                                                                {tag.count}
-                                                            </span>
-                                                        </label>
-                                                        
-                                                        {/* Toggle Sub-Models */}
-                                                        <button 
-                                                            onClick={(e) => toggleAccessoryExpand(tag.name, e)} 
-                                                            className={clsx(
-                                                                "p-1.5 rounded-lg transition-colors flex-shrink-0 ml-2",
-                                                                isExpanded ? "text-brand-blue bg-blue-100 hover:bg-blue-200" : "text-gray-400 hover:text-gray-600 hover:bg-gray-100"
+                                                            {activeChildCount > 0 && (
+                                                                <span className="text-[10px] font-bold bg-brand-blue text-white px-1.5 py-0.5 rounded-full min-w-[18px] text-center flex-shrink-0">
+                                                                    {activeChildCount}
+                                                                </span>
                                                             )}
-                                                            aria-label="Show device models"
-                                                        >
-                                                            <ChevronDown className={clsx("w-3.5 h-3.5 transition-transform", isExpanded ? "rotate-180" : "rotate-0")} />
-                                                        </button>
+                                                        </label>
+
+                                                        {/* Expand arrow for categories with children */}
+                                                        {hasChildren && (
+                                                            <button
+                                                                onClick={(e) => toggleAccessoryExpand(accCat.slug, e)}
+                                                                className={clsx(
+                                                                    "p-1.5 rounded-lg transition-colors flex-shrink-0 ml-1",
+                                                                    isExpanded ? "text-brand-blue bg-blue-100 hover:bg-blue-200" : "text-gray-400 hover:text-gray-600 hover:bg-gray-100"
+                                                                )}
+                                                                aria-label="Show sub-categories"
+                                                            >
+                                                                <ChevronDown className={clsx("w-3.5 h-3.5 transition-transform", isExpanded ? "rotate-180" : "rotate-0")} />
+                                                            </button>
+                                                        )}
                                                     </div>
 
-                                                    {/* Nested Device Models for this Accessory */}
+                                                    {/* Nested sub-categories */}
                                                     <AnimatePresence initial={false}>
-                                                        {isExpanded && (
+                                                        {hasChildren && isExpanded && (
                                                             <motion.div
                                                                 initial={{ height: 0, opacity: 0 }}
                                                                 animate={{ height: 'auto', opacity: 1 }}
                                                                 exit={{ height: 0, opacity: 0 }}
                                                                 className="overflow-hidden bg-white/50 border-t border-blue-50"
                                                             >
-                                                                <div className="p-3 pl-9 space-y-4">
-                                                                    {groupedModels.map(group => {
-                                                                        if (group.sortedModels.length === 0) return null;
-                                                                        // For sub-menus, just show top 3 models
+                                                                <div className="p-2 pl-8 space-y-0.5">
+                                                                    {(accCat.children || []).map(child => {
+                                                                        const childActive = activeCategories.includes(child.slug);
                                                                         return (
-                                                                            <div key={`acc-model-${group.id}`} className="space-y-1.5">
-                                                                                <span className="text-[10px] font-black text-gray-400 uppercase tracking-widest">{group.displayName}</span>
-                                                                                {group.sortedModels.slice(0, 3).map(model => {
-                                                                                    const modelActive = activeCategories.includes(model.slug);
-                                                                                    return (
-                                                                                        <label key={`acc-${tag.name}-${model.id}`} className="flex items-center gap-2 cursor-pointer group/item py-0.5">
-                                                                                            <input
-                                                                                                type="checkbox"
-                                                                                                checked={modelActive}
-                                                                                                onChange={() => handleSelectCategory(model.slug)}
-                                                                                                className="w-3.5 h-3.5 rounded border-gray-300 text-brand-blue focus:ring-brand-blue accent-brand-blue"
-                                                                                            />
-                                                                                            <span className={clsx("text-xs font-medium transition-colors truncate", modelActive ? "text-brand-blue" : "text-gray-500 group-hover/item:text-brand-blue")}>
-                                                                                                {model.name}
-                                                                                            </span>
-                                                                                        </label>
-                                                                                    );
-                                                                                })}
-                                                                                {group.sortedModels.length > 3 && (
-                                                                                    // A button to jump to full models list or just indicating there's more
-                                                                                    <div className="text-[10px] text-gray-400 font-medium pl-5 italic">
-                                                                                        + {group.sortedModels.length - 3} more
-                                                                                    </div>
-                                                                                )}
-                                                                            </div>
+                                                                            <label key={child.id} className="flex items-center gap-2 cursor-pointer group/item py-1 px-1 rounded-lg hover:bg-white transition-colors">
+                                                                                <div className={clsx(
+                                                                                    "w-3.5 h-3.5 rounded border flex items-center justify-center transition-colors flex-shrink-0",
+                                                                                    childActive ? "bg-brand-blue border-brand-blue" : "border-gray-300 bg-white group-hover/item:border-brand-blue"
+                                                                                )}>
+                                                                                    {childActive && <svg viewBox="0 0 14 14" fill="none" className="w-2.5 h-2.5 text-white"><path d="M3 7.5L5.5 10L11 4" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/></svg>}
+                                                                                </div>
+                                                                                <span
+                                                                                    className={clsx("text-xs font-medium transition-colors truncate", childActive ? "text-brand-blue" : "text-gray-500 group-hover/item:text-gray-900")}
+                                                                                    onClick={(e) => { e.preventDefault(); handleSelectCategory(child.slug); }}
+                                                                                >
+                                                                                    {child.name}
+                                                                                </span>
+                                                                            </label>
                                                                         );
                                                                     })}
                                                                 </div>
@@ -441,13 +489,6 @@ export default function ShopSidebar({
                                                 </div>
                                             );
                                         })}
-                                        
-                                        {/* If more than 15 tags exist, could add +more but 15 is plenty for now */}
-                                        {filterData.tags.length > 15 && (
-                                            <div className="text-xs font-semibold text-brand-blue pl-3 py-2">
-                                                + {filterData.tags.length - 15} more accessories
-                                            </div>
-                                        )}
                                     </div>
                                 </motion.div>
                             )}
