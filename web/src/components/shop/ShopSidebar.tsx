@@ -353,7 +353,9 @@ export default function ShopSidebar({
                                                 {visibleModels.map(model => {
                                                     const isActive = activeCategories.includes(model.slug);
                                                     return (
-                                                        <label key={model.id} className="flex items-center gap-2.5 cursor-pointer group/item py-1 px-1 rounded-lg hover:bg-white transition-colors">
+                                                        <label key={model.id}
+                                                            onClick={() => handleSelectCategory(model.slug)}
+                                                            className="flex items-center gap-2.5 cursor-pointer group/item py-1 px-1 rounded-lg hover:bg-white transition-colors">
                                                             <div className={clsx(
                                                                 "w-4 h-4 rounded border flex items-center justify-center transition-colors",
                                                                 isActive ? "bg-brand-blue border-brand-blue" : "border-gray-300 bg-white group-hover/item:border-brand-blue"
