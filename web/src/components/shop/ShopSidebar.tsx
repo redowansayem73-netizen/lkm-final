@@ -165,10 +165,14 @@ export default function ShopSidebar({
 
     // Calculate grouped models representing the "Brands" in categories (iPhone, Samsung)
     const groupedModels = useMemo(() => {
-        let matchingRoots = categories;
+        // Only consider roots that represent phone model families
+        const isModelRoot = (name: string) => /iphone|samsung|galaxy|pixel|oneplus|huawei|xiaomi|motorola|nokia|oppo|vivo/i.test(name);
+        
+        let matchingRoots = categories.filter(root => isModelRoot(root.name));
+
         if (searchQuery) {
             const q = searchQuery.toLowerCase();
-            matchingRoots = categories.map(root => {
+            matchingRoots = matchingRoots.map(root => {
                 const childMatches = (root.children || []).filter(c => c.name.toLowerCase().includes(q));
                 if (root.name.toLowerCase().includes(q) || childMatches.length > 0) {
                     return { ...root, children: childMatches.length > 0 ? childMatches : root.children };
@@ -184,6 +188,7 @@ export default function ShopSidebar({
                 const numA = parseInt(a.name.replace(/\D/g, '')) || 0;
                 const numB = parseInt(b.name.replace(/\D/g, '')) || 0;
                 if (numA !== numB) return numB - numA;
+                // If numbers are the same, sort alphabetically
                 return a.name.localeCompare(b.name);
             });
             return {
