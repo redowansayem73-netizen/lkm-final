@@ -22,14 +22,17 @@ export async function GET(request: Request) {
 
         let categoryIds: number[] = [];
         if (categorySlug) {
-            const category = await db.select().from(categories).where(eq(categories.slug, categorySlug)).limit(1);
-            if (category.length > 0) {
-                const parentId = category[0].id;
-                // Also include all child categories so parent categories show all their children's products
-                const childCats = await db.select({ id: categories.id })
-                    .from(categories)
-                    .where(eq(categories.parentId, parentId));
-                categoryIds = [parentId, ...childCats.map(c => c.id)];
+            const slugs = categorySlug.split(',').map(s => s.trim()).filter(Boolean);
+            if (slugs.length > 0) {
+                const foundCategories = await db.select().from(categories).where(inArray(categories.slug, slugs));
+                if (foundCategories.length > 0) {
+                    const parentIds = foundCategories.map(c => c.id);
+                    // Also include all child categories so parent categories show all their children's products
+                    const childCats = await db.select({ id: categories.id })
+                        .from(categories)
+                        .where(inArray(categories.parentId, parentIds));
+                    categoryIds = [...parentIds, ...childCats.map(c => c.id)];
+                }
             }
         }
 

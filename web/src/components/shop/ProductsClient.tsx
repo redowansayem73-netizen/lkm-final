@@ -73,13 +73,14 @@ export default function ProductsClient({ initialBrands, initialCategories }: Sho
     const searchParams = useSearchParams();
 
     // Initialize state from URL params
-    const initialCategory = searchParams.get('category') || null;
+    const initialCategoryParam = searchParams.get('category');
+    const initialActiveCategories = initialCategoryParam ? initialCategoryParam.split(',').filter(Boolean) : [];
     const initialBrand = searchParams.get('brand') || "";
 
     const [products, setProducts] = useState<Product[]>([]);
     const [loading, setLoading] = useState(true);
-    const [activeCategory, setActiveCategory] = useState<string | null>(initialCategory);
-    const [activeCategoryName, setActiveCategoryName] = useState<string>("");
+    const [activeCategories, setActiveCategories] = useState<string[]>(initialActiveCategories);
+    const [activeCategoryNames, setActiveCategoryNames] = useState<string[]>([]);
     const [activeBrandSlug, setActiveBrandSlug] = useState<string>(initialBrand);
     const [currentPage, setCurrentPage] = useState(1);
     const [totalPages, setTotalPages] = useState(1);
@@ -114,7 +115,8 @@ export default function ProductsClient({ initialBrands, initialCategories }: Sho
     useEffect(() => {
         const cat = searchParams.get('category');
         const brnd = searchParams.get('brand');
-        if (cat !== activeCategory) setActiveCategory(cat);
+        const catArray = cat ? cat.split(',').filter(Boolean) : [];
+        if (catArray.join(',') !== activeCategories.join(',')) setActiveCategories(catArray);
         if (brnd && brnd !== activeBrandSlug) {
             setActiveBrandSlug(brnd);
             setActiveBrands([brnd]);
@@ -125,7 +127,7 @@ export default function ProductsClient({ initialBrands, initialCategories }: Sho
         setLoading(true);
         try {
             let url = `/api/products?page=${currentPage}&limit=${PRODUCTS_PER_PAGE}`;
-            if (activeCategory) url += `&category=${activeCategory}`;
+            if (activeCategories.length > 0) url += `&category=${activeCategories.join(',')}`;
             if (activeBrands.length > 0) url += `&brand=${activeBrands[0]}`;
             if (debouncedSearch) url += `&search=${encodeURIComponent(debouncedSearch)}`;
             if (activeConditions.length > 0) url += `&condition=${activeConditions.join(',')}`;
@@ -150,13 +152,12 @@ export default function ProductsClient({ initialBrands, initialCategories }: Sho
         } finally {
             setLoading(false);
         }
-    }, [currentPage, activeCategory, activeBrands, sortBy, debouncedSearch, activeConditions, activeTags, priceRange]);
+    }, [currentPage, activeCategories, activeBrands, sortBy, debouncedSearch, activeConditions, activeTags, priceRange]);
 
     useEffect(() => { fetchProducts(); }, [fetchProducts]);
 
-    // Resolve the active category display name
     useEffect(() => {
-        if (!activeCategory) { setActiveCategoryName(""); return; }
+        if (activeCategories.length === 0) { setActiveCategoryNames([]); return; }
         const findName = (cats: Category[], slug: string): string => {
             for (const cat of cats) {
                 if (cat.slug === slug) return cat.name;
@@ -167,28 +168,28 @@ export default function ProductsClient({ initialBrands, initialCategories }: Sho
             }
             return slug;
         };
-        setActiveCategoryName(findName(initialCategories, activeCategory));
-    }, [activeCategory, initialCategories]);
+        setActiveCategoryNames(activeCategories.map(c => findName(initialCategories, c)));
+    }, [activeCategories, initialCategories]);
 
-    const updateUrlParams = (cat: string | null, brand: string) => {
+    const updateUrlParams = (cats: string[], brand: string) => {
         const params = new URLSearchParams();
-        if (cat) params.set('category', cat);
+        if (cats.length > 0) params.set('category', cats.join(','));
         if (brand) params.set('brand', brand);
         router.push(`/products${params.toString() ? `?${params.toString()}` : ''}`, { scroll: false });
     };
 
-    const handleCategoryChange = (slug: string | null) => {
-        setActiveCategory(slug);
-        setActiveTags([]); // Reset tags when category changes since they're category-specific
+    const handleCategoryChange = (slugs: string[]) => {
+        setActiveCategories(slugs);
+        // Do not reset tags when changing models to allow cross-filtering (e.g., Phone Case -> iPhone 16)
         setCurrentPage(1);
-        updateUrlParams(slug, activeBrands.length > 0 ? activeBrands[0] : "");
+        updateUrlParams(slugs, activeBrands.length > 0 ? activeBrands[0] : "");
     };
 
     const handleBrandChange = (brands: string[]) => {
         setActiveBrands(brands);
         setActiveBrandSlug(brands[0] || "");
         setCurrentPage(1);
-        updateUrlParams(activeCategory, brands[0] || "");
+        updateUrlParams(activeCategories, brands[0] || "");
     };
 
     const handlePageChange = (page: number) => {
@@ -200,7 +201,7 @@ export default function ProductsClient({ initialBrands, initialCategories }: Sho
     };
 
     const hasActiveFilters = !!(
-        activeCategory ||
+        activeCategories.length > 0 ||
         activeBrands.length > 0 ||
         activeConditions.length > 0 ||
         activeTags.length > 0 ||
@@ -210,7 +211,8 @@ export default function ProductsClient({ initialBrands, initialCategories }: Sho
     );
 
     const clearAllFilters = () => {
-        setActiveCategory(null);
+        setActiveCategories([]);
+        setActiveCategoryNames([]);
         setActiveBrands([]);
         setActiveBrandSlug("");
         setActiveConditions([]);
@@ -225,14 +227,14 @@ export default function ProductsClient({ initialBrands, initialCategories }: Sho
     const startItem = totalCount > 0 ? (currentPage - 1) * PRODUCTS_PER_PAGE + 1 : 0;
     const endItem = Math.min(currentPage * PRODUCTS_PER_PAGE, totalCount);
 
-    // Collect all active filter labels for displaying chips
     const activeFilterChips: { label: string; onRemove: () => void }[] = [];
-    if (activeCategory && activeCategoryName) {
+    activeCategories.forEach((catSlug, idx) => {
+        const name = activeCategoryNames[idx] || catSlug;
         activeFilterChips.push({
-            label: `Category: ${activeCategoryName}`,
-            onRemove: () => handleCategoryChange(null),
+            label: `Model: ${name}`,
+            onRemove: () => handleCategoryChange(activeCategories.filter(c => c !== catSlug)),
         });
-    }
+    });
     activeBrands.forEach(brand => {
         activeFilterChips.push({
             label: `Brand: ${brand}`,
@@ -294,7 +296,7 @@ export default function ProductsClient({ initialBrands, initialCategories }: Sho
                             <div className="flex-1 overflow-y-auto p-5">
                                 <ShopSidebar
                                     categories={initialCategories}
-                                    activeCategory={activeCategory}
+                                    activeCategories={activeCategories}
                                     onCategoryChange={handleCategoryChange}
                                     onClose={() => setSidebarOpen(false)}
                                     isMobile={true}
@@ -319,17 +321,17 @@ export default function ProductsClient({ initialBrands, initialCategories }: Sho
                 {/* Breadcrumb / page banner */}
                 <div className="w-full bg-white border-b border-gray-100">
                     <div className="max-w-[1600px] mx-auto px-4 sm:px-6 lg:px-8 py-4 flex items-center gap-2 text-sm text-gray-500">
-                        <span className="hover:text-brand-blue cursor-pointer transition-colors" onClick={() => handleCategoryChange(null)}>All Products</span>
+                        <span className="hover:text-brand-blue cursor-pointer transition-colors" onClick={() => handleCategoryChange([])}>All Products</span>
                         {activeBrandSlug && (
                             <>
                                 <ChevronRight className="w-4 h-4 text-gray-300" />
                                 <span className="text-gray-900 font-semibold">{activeBrandSlug.charAt(0).toUpperCase() + activeBrandSlug.slice(1).replace('-', ' ')}</span>
                             </>
                         )}
-                        {activeCategoryName && !activeBrandSlug && (
+                        {activeCategoryNames.length > 0 && !activeBrandSlug && (
                             <>
                                 <ChevronRight className="w-4 h-4 text-gray-300" />
-                                <span className="text-gray-900 font-semibold">{activeCategoryName}</span>
+                                <span className="text-gray-900 font-semibold">{activeCategoryNames.join(', ')}</span>
                             </>
                         )}
                     </div>
@@ -342,7 +344,7 @@ export default function ProductsClient({ initialBrands, initialCategories }: Sho
                             <div className="sticky top-[110px] bg-white rounded-2xl border border-gray-100 shadow-sm p-5 max-h-[calc(100vh-130px)] overflow-y-auto custom-scrollbar">
                                 <ShopSidebar
                                     categories={initialCategories}
-                                    activeCategory={activeCategory}
+                                    activeCategories={activeCategories}
                                     onCategoryChange={handleCategoryChange}
                                     activeBrandSlugs={activeBrands}
                                     onBrandChange={handleBrandChange}
@@ -503,7 +505,7 @@ export default function ProductsClient({ initialBrands, initialCategories }: Sho
                                         </motion.div>
                                     ) : products.length > 0 ? (
                                         <motion.div
-                                            key={`grid-${currentPage}-${activeCategory}-${gridCols}`}
+                                            key={`grid-${currentPage}-${activeCategories.join('-')}-${gridCols}`}
                                             initial={{ opacity: 0, y: 12 }}
                                             animate={{ opacity: 1, y: 0 }}
                                             transition={{ duration: 0.3 }}

@@ -125,8 +125,8 @@ export default function ShopClient({ initialBrands, initialCategories }: ShopCli
         setActiveCategoryName(findName(initialCategories, activeCategory));
     }, [activeCategory, initialCategories]);
 
-    const handleCategoryChange = (slug: string | null) => {
-        setActiveCategory(slug);
+    const handleCategoryChange = (slugs: string[]) => {
+        setActiveCategory(slugs.length > 0 ? slugs[0] : null);
         setActiveBrandSlug(""); // Clear brand when categorizing
         setCurrentPage(1);
     };
@@ -175,7 +175,7 @@ export default function ShopClient({ initialBrands, initialCategories }: ShopCli
                             <div className="flex-1 overflow-y-auto p-5">
                                 <ShopSidebar
                                     categories={initialCategories}
-                                    activeCategory={activeCategory}
+                                    activeCategories={activeCategory ? [activeCategory] : []}
                                     onCategoryChange={handleCategoryChange}
                                     onClose={() => setSidebarOpen(false)}
                                     isMobile={true}
@@ -190,7 +190,7 @@ export default function ShopClient({ initialBrands, initialCategories }: ShopCli
                 {/* Breadcrumb / page banner */}
                 <div className="w-full bg-white border-b border-gray-100">
                     <div className="max-w-[1600px] mx-auto px-4 sm:px-6 lg:px-8 py-4 flex items-center gap-2 text-sm text-gray-500">
-                        <span className="hover:text-brand-blue cursor-pointer transition-colors" onClick={() => { handleCategoryChange(null); setActiveBrandSlug(""); }}>Shop</span>
+                        <span className="hover:text-brand-blue cursor-pointer transition-colors" onClick={() => { handleCategoryChange([]); setActiveBrandSlug(""); }}>Shop</span>
                         {activeBrandSlug && (
                             <>
                                 <ChevronRight className="w-4 h-4 text-gray-300" />
@@ -231,7 +231,7 @@ export default function ShopClient({ initialBrands, initialCategories }: ShopCli
                             <div className="sticky top-[110px] bg-white rounded-2xl border border-gray-100 shadow-sm p-5 max-h-[calc(100vh-130px)] overflow-y-auto custom-scrollbar">
                                 <ShopSidebar
                                     categories={initialCategories}
-                                    activeCategory={activeCategory}
+                                    activeCategories={activeCategory ? [activeCategory] : []}
                                     onCategoryChange={handleCategoryChange}
                                 />
                             </div>
@@ -259,7 +259,7 @@ export default function ShopClient({ initialBrands, initialCategories }: ShopCli
                                                 initial={{ opacity: 0, scale: 0.9 }}
                                                 animate={{ opacity: 1, scale: 1 }}
                                                 exit={{ opacity: 0, scale: 0.9 }}
-                                                onClick={() => handleCategoryChange(null)}
+                                                onClick={() => handleCategoryChange([])}
                                                 className="flex items-center gap-1.5 h-10 px-4 bg-blue-50 text-brand-blue rounded-xl text-sm font-semibold border border-blue-200 hover:bg-blue-100 transition-all"
                                             >
                                                 {activeCategoryName}
@@ -364,7 +364,7 @@ export default function ShopClient({ initialBrands, initialCategories }: ShopCli
                                             </p>
                                             {activeCategory && (
                                                 <button
-                                                    onClick={() => handleCategoryChange(null)}
+                                                    onClick={() => handleCategoryChange([])}
                                                     className="mt-5 px-5 py-2 bg-brand-blue text-white rounded-xl text-sm font-bold hover:bg-blue-700 transition-colors"
                                                 >
                                                     Clear Filter
