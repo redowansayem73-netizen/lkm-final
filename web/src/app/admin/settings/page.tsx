@@ -218,8 +218,49 @@ export default function AdminSettingsPage() {
                         <input type="file" accept="image/*" onChange={(e) => handleLogoUpload(e, 'site_favicon')} disabled={uploading}
                             className="block w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-xl file:border-0 file:text-sm file:font-semibold file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100"
                         />
-                        <p className="mt-1 text-xs text-gray-400">Recommended: 32×32px PNG</p>
+                        <p className="mt-1 text-xs text-gray-400">Recommended: 32×32px ICO or PNG</p>
                     </div>
+                </div>
+            </SectionCard>
+
+            <SectionCard title="Site Icons" description="Upload icons for different devices and platforms. These appear in browser tabs, bookmarks, home screens, and PWA installs.">
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+                    {[
+                        { key: 'site_icon_16', label: 'Icon 16×16', size: '16×16px', desc: 'Tiny icon for browser tabs', previewSize: 'h-4 w-4' },
+                        { key: 'site_icon_32', label: 'Icon 32×32', size: '32×32px', desc: 'Standard favicon size', previewSize: 'h-8 w-8' },
+                        { key: 'site_icon_192', label: 'Icon 192×192', size: '192×192px', desc: 'Android home screen & PWA', previewSize: 'h-12 w-12' },
+                        { key: 'site_icon_512', label: 'Icon 512×512', size: '512×512px', desc: 'PWA splash screen', previewSize: 'h-16 w-16' },
+                        { key: 'site_apple_touch_icon', label: 'Apple Touch Icon', size: '180×180px', desc: 'iOS home screen bookmark', previewSize: 'h-12 w-12' },
+                    ].map(({ key, label, size, desc, previewSize }) => (
+                        <div key={key} className="border border-gray-100 rounded-xl p-4 bg-gray-50/50">
+                            <label className="block text-sm font-semibold text-gray-800 mb-0.5">{label}</label>
+                            <p className="text-[11px] text-gray-400 mb-3">{desc} — <span className="font-medium text-gray-500">{size}</span></p>
+                            {data[key] && (
+                                <div className="mb-3 p-2.5 bg-white rounded-lg border border-gray-200 flex items-center gap-3">
+                                    <div className="flex items-center justify-center bg-gray-100/80 rounded-lg p-2">
+                                        <img src={data[key]} alt={label} className={`${previewSize} object-contain`} />
+                                    </div>
+                                    <div className="flex-1 min-w-0">
+                                        <p className="text-xs text-gray-500 truncate">{data[key]}</p>
+                                    </div>
+                                    <button onClick={() => set(key, '')} className="p-1 text-gray-400 hover:text-red-500 rounded flex-shrink-0">
+                                        <X className="w-3.5 h-3.5" />
+                                    </button>
+                                </div>
+                            )}
+                            <input
+                                type="file"
+                                accept="image/png,image/svg+xml,image/x-icon"
+                                onChange={(e) => handleLogoUpload(e, key)}
+                                disabled={uploading}
+                                className="block w-full text-xs text-gray-500 file:mr-3 file:py-1.5 file:px-3 file:rounded-lg file:border-0 file:text-xs file:font-semibold file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100 cursor-pointer"
+                            />
+                        </div>
+                    ))}
+                </div>
+                <div className="mt-4 p-3 rounded-lg bg-blue-50 border border-blue-100 text-xs text-blue-700">
+                    <p className="font-semibold mb-1">💡 Tip</p>
+                    <p>Upload a single high-quality PNG (512×512) and we recommend using it as the base for all icon sizes. Use PNG format with transparent background for best results.</p>
                 </div>
             </SectionCard>
 
