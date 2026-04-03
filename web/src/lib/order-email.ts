@@ -86,7 +86,7 @@ export async function sendOrderConfirmationEmail(data: OrderEmailData) {
 
             <div style="text-align: center; margin-top: 30px; padding: 25px; background: #eff6ff; border-radius: 12px; border: 1px solid #bfdbfe;">
                 <p style="margin: 0 0 15px; color: #1e40af; font-weight: bold;">Want to see where your order is?</p>
-                <a href="${process.env.NEXT_PUBLIC_APP_URL || 'https://lakembamobile.com.au'}/track-order/${data.orderNumber}" 
+                <a href="${process.env.NEXT_PUBLIC_APP_URL || 'https://lakembamobileking.com.au'}/track-order/${data.orderNumber}" 
                    style="background: #1e40af; color: white; padding: 12px 25px; text-decoration: none; border-radius: 30px; font-weight: bold; display: inline-block;">
                     Track Your Order
                 </a>
@@ -147,7 +147,7 @@ export async function sendShippedConfirmationEmail(data: OrderEmailData) {
                 <p style="margin: 0 0 20px; color: #0f172a; font-size: 24px; font-weight: bold; font-family: monospace; border: 1px solid #e2e8f0; background: white; padding: 10px; display: inline-block;">${data.trackingNumber || 'N/A'}</p>
                 
                 <div style="margin-top: 10px;">
-                    <a href="${process.env.NEXT_PUBLIC_APP_URL || 'https://lakembamobile.com.au'}/track-order/${data.orderNumber}" 
+                    <a href="${process.env.NEXT_PUBLIC_APP_URL || 'https://lakembamobileking.com.au'}/track-order/${data.orderNumber}" 
                        style="background: #1e40af; color: white; padding: 14px 30px; text-decoration: none; border-radius: 30px; font-weight: bold; display: inline-block; box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);">
                         Track My Package
                     </a>

@@ -10,6 +10,91 @@ import clsx from 'clsx';
 
 type RepairItem = { id?: number; brand: string; model: string; issue: string; price: string; time: string; };
 
+function SearchableSelect({
+    options,
+    value,
+    onChange,
+    placeholder,
+    disabled = false,
+    icon: Icon = ChevronDown
+}: {
+    options: string[];
+    value: string;
+    onChange: (val: string) => void;
+    placeholder: string;
+    disabled?: boolean;
+    icon?: any;
+}) {
+    const [isOpen, setIsOpen] = useState(false);
+    const [search, setSearch] = useState('');
+
+    const filtered = useMemo(() => {
+        if (!search) return options;
+        const low = search.toLowerCase();
+        return options.filter(o => o.toLowerCase().includes(low));
+    }, [options, search]);
+
+    useEffect(() => {
+        if (!isOpen) setSearch('');
+    }, [isOpen]);
+
+    return (
+        <div className="relative">
+            <button
+                type="button"
+                disabled={disabled}
+                onClick={() => setIsOpen(!isOpen)}
+                className={`w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl text-left font-medium text-[14px] outline-none transition-all flex items-center justify-between ${disabled ? 'opacity-40 cursor-not-allowed' : 'hover:border-gray-300 focus:border-[#265795] focus:ring-2 focus:ring-[#265795]/10'} ${value ? 'text-gray-800' : 'text-gray-400'}`}
+            >
+                <span className="truncate">{value || placeholder}</span>
+                <Icon className={`w-4 h-4 text-gray-400 transition-transform ${isOpen ? 'rotate-180' : ''}`} />
+            </button>
+
+            <AnimatePresence>
+                {isOpen && !disabled && (
+                    <>
+                        <div className="fixed inset-0 z-40" onClick={() => setIsOpen(false)} />
+                        <motion.div
+                            initial={{ opacity: 0, y: -5 }}
+                            animate={{ opacity: 1, y: 0 }}
+                            exit={{ opacity: 0, y: -5 }}
+                            transition={{ duration: 0.15 }}
+                            className="absolute z-50 w-full mt-1.5 bg-white border border-gray-100 rounded-xl shadow-xl overflow-hidden"
+                        >
+                            <div className="p-2 border-b border-gray-100">
+                                <input
+                                    type="text"
+                                    autoFocus
+                                    placeholder="Search..."
+                                    className="w-full px-3 py-1.5 bg-gray-50 border border-gray-200 rounded-lg text-sm text-gray-800 placeholder-gray-400 outline-none focus:border-[#265795] focus:ring-1 focus:ring-[#265795]/20"
+                                    value={search}
+                                    onChange={e => setSearch(e.target.value)}
+                                />
+                            </div>
+                            <ul className="max-h-56 overflow-y-auto py-1">
+                                {filtered.length === 0 ? (
+                                    <li className="px-4 py-2.5 text-sm text-gray-400 text-center">No results found</li>
+                                ) : (
+                                    filtered.map(opt => (
+                                        <li
+                                            key={opt}
+                                            onClick={() => { onChange(opt); setIsOpen(false); }}
+                                            className={`px-4 py-2 cursor-pointer text-sm transition-colors ${opt === value ? 'bg-[#265795]/10 text-[#265795] font-bold' : 'text-gray-700 hover:bg-gray-50'}`}
+                                        >
+                                            {opt}
+                                        </li>
+                                    ))
+                                )}
+                            </ul>
+                        </motion.div>
+                    </>
+                )}
+            </AnimatePresence>
+        </div>
+    );
+}
+
+
 export default function QuickQuote({ variant = 'light' }: { variant?: 'light' | 'dark' }) {
     const [repairsData, setRepairsData] = useState<RepairItem[]>([]);
     const [isLoadingData, setIsLoadingData] = useState(true);
@@ -123,14 +208,12 @@ export default function QuickQuote({ variant = 'light' }: { variant?: 'light' | 
                             <div>
                                 <label className={labelClass}>Brand</label>
                                 <div className="relative">
-                                    <select className={selectClass} value={selectedBrand}
-                                        onChange={e => { setSelectedBrand(e.target.value); setSelectedModel(''); setSelectedIssue(''); }}
-                                        style={{ color: selectedBrand ? '#000' : '#9ca3af' }}
-                                    >
-                                        <option value="" disabled className="text-black">Select Brand</option>
-                                        {brands.map(b => <option key={b} value={b} className="text-black">{b}</option>)}
-                                    </select>
-                                    <ChevronDown className="absolute right-3.5 top-1/2 -translate-y-1/2 text-gray-400 pointer-events-none w-4 h-4" />
+                                    <SearchableSelect 
+                                        options={brands} 
+                                        value={selectedBrand} 
+                                        onChange={val => { setSelectedBrand(val); setSelectedModel(''); setSelectedIssue(''); }} 
+                                        placeholder="Select Brand" 
+                                    />
                                 </div>
                             </div>
 
@@ -138,14 +221,13 @@ export default function QuickQuote({ variant = 'light' }: { variant?: 'light' | 
                             <div className={clsx('transition-opacity duration-200', !selectedBrand && 'opacity-50 pointer-events-none')}>
                                 <label className={labelClass}>Model</label>
                                 <div className="relative">
-                                    <select className={selectClass} value={selectedModel} disabled={!selectedBrand}
-                                        onChange={e => { setSelectedModel(e.target.value); setSelectedIssue(''); }}
-                                        style={{ color: selectedModel ? '#000' : '#9ca3af' }}
-                                    >
-                                        <option value="" disabled className="text-black">Select Model</option>
-                                        {models.map(m => <option key={m} value={m} className="text-black">{m}</option>)}
-                                    </select>
-                                    <ChevronDown className="absolute right-3.5 top-1/2 -translate-y-1/2 text-gray-400 pointer-events-none w-4 h-4" />
+                                    <SearchableSelect 
+                                        options={models} 
+                                        value={selectedModel} 
+                                        onChange={val => { setSelectedModel(val); setSelectedIssue(''); }} 
+                                        placeholder="Select Model" 
+                                        disabled={!selectedBrand} 
+                                    />
                                 </div>
                             </div>
 
@@ -153,14 +235,13 @@ export default function QuickQuote({ variant = 'light' }: { variant?: 'light' | 
                             <div className={clsx('transition-opacity duration-200', !selectedModel && 'opacity-50 pointer-events-none')}>
                                 <label className={labelClass}>Issue</label>
                                 <div className="relative">
-                                    <select className={selectClass} value={selectedIssue} disabled={!selectedModel}
-                                        onChange={e => setSelectedIssue(e.target.value)}
-                                        style={{ color: selectedIssue ? '#000' : '#9ca3af' }}
-                                    >
-                                        <option value="" disabled className="text-black">Select Issue</option>
-                                        {issues.map(i => <option key={i} value={i} className="text-black">{i}</option>)}
-                                    </select>
-                                    <ChevronDown className="absolute right-3.5 top-1/2 -translate-y-1/2 text-gray-400 pointer-events-none w-4 h-4" />
+                                    <SearchableSelect 
+                                        options={issues} 
+                                        value={selectedIssue} 
+                                        onChange={val => setSelectedIssue(val)} 
+                                        placeholder="Select Issue" 
+                                        disabled={!selectedModel} 
+                                    />
                                 </div>
                             </div>
 

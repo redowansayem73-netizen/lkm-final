@@ -29,9 +29,9 @@ export default function AdminLogin() {
     };
 
     return (
-        <div className="flex min-h-screen items-center justify-center bg-gray-100">
-            <div className="w-full max-w-md rounded-lg bg-white p-8 shadow-lg">
-                <div className="mb-6 text-center">
+        <div className="flex min-h-screen items-center justify-center bg-gray-100" suppressHydrationWarning>
+            <div className="w-full max-w-md rounded-lg bg-white p-8 shadow-lg" suppressHydrationWarning>
+                <div className="mb-6 text-center" suppressHydrationWarning>
                     {/* Logo placeholder - replace with actual logo path */}
                     <div className="text-2xl font-bold text-brand-blue">Lakemba Mobile King</div>
                     <div className="text-gray-500">Admin Portal</div>

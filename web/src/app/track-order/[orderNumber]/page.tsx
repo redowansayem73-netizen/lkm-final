@@ -204,7 +204,7 @@ export default function TrackOrderPage({ params }: { params: Promise<{ orderNumb
                                         Call Us
                                     </a>
                                     <a
-                                        href="mailto:info@lakembamobile.com.au"
+                                        href="mailto:support@lakembamobileking.com.au"
                                         className="inline-flex items-center gap-2 bg-white text-yellow-700 px-4 py-2 rounded-full font-medium border border-yellow-300 hover:bg-yellow-50 transition"
                                     >
                                         <Mail className="w-4 h-4" />

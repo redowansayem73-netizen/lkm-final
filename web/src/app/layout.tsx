@@ -113,7 +113,7 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="en" dir="ltr">
+    <html lang="en" dir="ltr" suppressHydrationWarning>
       <head>
         <DynamicFavicon />
         <link rel="preconnect" href="https://fonts.googleapis.com" />
@@ -123,7 +123,7 @@ export default function RootLayout({
         <meta name="geo.position" content="-33.9185;151.0753" />
         <meta name="ICBM" content="-33.9185, 151.0753" />
       </head>
-      <body className={`${inter.variable} ${poppins.variable} ${outfit.variable} ${inter.className}`}>
+      <body className={`${inter.variable} ${poppins.variable} ${outfit.variable} ${inter.className}`} suppressHydrationWarning>
         <Providers>
           <ConditionalLayout>
             {children}
