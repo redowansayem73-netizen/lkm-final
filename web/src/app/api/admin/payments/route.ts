@@ -26,7 +26,7 @@ const DEFAULT_PAYMENT_SETTINGS = {
     },
     inStorePickup: {
         enabled: true,
-        instructions: 'Visit our store at Shop 2/118 Haldon St, Lakemba NSW 2195 to complete your purchase.',
+        instructions: 'Visit our store at Shop 2, 52 Railway Parade, Lakemba, NSW 2195 to complete your purchase.',
     },
     cashOnDelivery: {
         enabled: false,

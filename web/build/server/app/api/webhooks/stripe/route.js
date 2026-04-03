@@ -60,10 +60,10 @@
             </div>
         </div>
 
-        <div style="text-align: center; padding: 20px; color: #6b7280; font-size: 12px;">
-            <p style="margin: 0;">Lakemba Mobile King</p>
-            <p style="margin: 5px 0;">Shop 2/118 Haldon St, Lakemba NSW 2195</p>
-            <p style="margin: 5px 0;">Phone: (02) 9740 5353</p>
+        <div style="text-align: center; padding: 20px; color: #6b7280; font-size: 12px; line-height: 1.5;">
+            <p style="margin: 0; font-weight: bold;">Lakemba Mobile King</p>
+            <p style="margin: 5px 0;">Shop 2, 52 Railway Parade, Lakemba, NSW 2195</p>
+            <p style="margin: 5px 0;">Phone: 0410 807 546 | Email: info@lakembamobileking.com.au</p>
         </div>
     </div>
     `;try{return await t.sendMail({from:`"Lakemba Mobile King" <${r}>`,to:e.customerEmail,subject:`Order Confirmation - ${e.orderNumber}`,html:i}),console.log("Order confirmation email sent to:",e.customerEmail),!0}catch(e){return console.error("Failed to send order confirmation email:",e),!1}}async function i(e){let{transporter:t,user:r}=(0,o.J)("order"),s={aus_post:"Australia Post",sendle:"Sendle",startrack:"StarTrack",dhl:"DHL Express",other:"Our Carrier"}[e.shippingProvider||"other"]||"Our Carrier",i=`
@@ -108,13 +108,14 @@
             </p>
 
             <div style="text-align: center; margin-top: 40px; padding-top: 20px; border-top: 1px solid #e2e8f0;">
-                <p style="color: #64748b; font-size: 14px;">Questions? Reply to this email or call us at (02) 9740 5353</p>
+                <p style="color: #64748b; font-size: 14px;">Questions? Reply to this email or call us at 0410 807 546</p>
             </div>
         </div>
 
-        <div style="text-align: center; padding: 30px; color: #94a3b8; font-size: 12px;">
+        <div style="text-align: center; padding: 30px; color: #94a3b8; font-size: 12px; line-height: 1.5;">
             <p style="margin: 0; font-weight: bold;">Lakemba Mobile King</p>
-            <p style="margin: 5px 0;">Shop 2/118 Haldon St, Lakemba NSW 2195</p>
+            <p style="margin: 5px 0;">Shop 2, 52 Railway Parade, Lakemba, NSW 2195</p>
+            <p style="margin: 5px 0;">Phone: 0410 807 546 | Email: info@lakembamobileking.com.au</p>
             <p style="margin: 10px 0;">\xa9 ${new Date().getFullYear()} Lakemba Mobile King. All rights reserved.</p>
         </div>
     </div>

@@ -92,7 +92,7 @@ export async function POST(request: Request) {
                             <hr style="border-top: 1px solid #e5e7eb; margin: 15px 0;">
                             <p style="margin: 5px 0;"><strong>Date:</strong> ${bookingDate}</p>
                             <p style="margin: 5px 0;"><strong>Time:</strong> ${bookingTime}</p>
-                            <p style="margin: 5px 0;"><strong>Store Address:</strong> 85 Haldon St, Lakemba NSW 2195</p>
+                            <p style="margin: 5px 0;"><strong>Store Address:</strong> Shop 2, 52 Railway Parade, Lakemba, NSW 2195</p>
                         </div>
                         
                         <p>If you need to reschedule or have any questions, simply reply to this email or call us directly at <strong>0410 807 546</strong>.</p>
@@ -100,6 +100,13 @@ export async function POST(request: Request) {
                         <br>
                         <p>Best Regards,</p>
                         <p><strong>The Lakemba Mobile King Team</strong></p>
+                    </div>
+                    
+                    <div style="background-color: #f8fafc; text-align: center; padding: 25px; color: #64748b; font-size: 12px; line-height: 1.5; border-top: 1px solid #e2e8f0;">
+                        <p style="margin: 0; font-weight: bold; color: #0f172a;">Lakemba Mobile King</p>
+                        <p style="margin: 5px 0;">Shop 2, 52 Railway Parade, Lakemba, NSW 2195</p>
+                        <p style="margin: 5px 0;">Phone: 0410 807 546 | Email: info@lakembamobileking.com.au</p>
+                        <p style="margin: 10px 0 0;">© ${new Date().getFullYear()} Lakemba Mobile King. All rights reserved.</p>
                     </div>
                 </div>
             `

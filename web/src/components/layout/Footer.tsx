@@ -57,11 +57,14 @@ export default function Footer() {
                             </li>
                             <li className="flex items-center">
                                 <Mail className="h-5 w-5 mr-2 text-brand-yellow" />
-                                <span>lakembamobileking@gmail.com</span>
+                                <span>info@lakembamobileking.com.au</span>
                             </li>
                             <li className="mt-4">
                                 <h4 className="font-semibold text-white">Opening Hours</h4>
                                 <p className="text-sm">2:00 PM – 11:00 PM (7 Days)</p>
+                            </li>
+                            <li className="mt-2">
+                                <p className="text-sm text-gray-500">ABN: 68 665 095 143</p>
                             </li>
                         </ul>
                     </div>
