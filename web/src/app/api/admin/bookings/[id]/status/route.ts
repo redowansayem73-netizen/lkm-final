@@ -5,6 +5,7 @@ import { db } from '@/db';
 import { bookings } from '@/db/schema';
 import { eq } from 'drizzle-orm';
 import nodemailer from 'nodemailer';
+import { getEmailTransporter } from '@/lib/email-service';
 
 export async function PUT(request: Request, context: { params: Promise<{ id: string }> }) {
     try {
@@ -43,13 +44,7 @@ export async function PUT(request: Request, context: { params: Promise<{ id: str
 
         // Send email notification to customer
         try {
-            const transporter = nodemailer.createTransport({
-                service: 'gmail',
-                auth: {
-                    user: process.env.EMAIL_USER,
-                    pass: process.env.EMAIL_PASS
-                }
-            });
+            const { transporter, user } = getEmailTransporter('service');
 
             let statusMessage = '';
             let subjectStr = '';
@@ -64,7 +59,7 @@ export async function PUT(request: Request, context: { params: Promise<{ id: str
 
             if (statusMessage) {
                 const mailOptions = {
-                    from: `"Lakemba Mobile King" <${process.env.EMAIL_USER}>`,
+                    from: `"Lakemba Mobile King" <${user}>`,
                     to: booking.customerEmail,
                     subject: subjectStr,
                     html: `

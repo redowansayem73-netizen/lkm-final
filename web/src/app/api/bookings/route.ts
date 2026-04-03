@@ -3,7 +3,7 @@ import { NextResponse } from 'next/server';
 import { db } from '@/db';
 import { bookings } from '@/db/schema';
 import nodemailer from 'nodemailer';
-
+import { getEmailTransporter } from '@/lib/email-service';
 export async function POST(request: Request) {
     try {
         const body = await request.json();
@@ -41,16 +41,10 @@ export async function POST(request: Request) {
         });
 
         // 2. Send Email
-        const transporter = nodemailer.createTransport({
-            service: 'gmail',
-            auth: {
-                user: process.env.EMAIL_USER, // e.g. aarsayem002@gmail.com
-                pass: process.env.EMAIL_PASS  // App Password
-            }
-        });
+        const { transporter, user } = getEmailTransporter('service');
 
         const mailOptions = {
-            from: process.env.EMAIL_USER,
+            from: user,
             to: 'redowansayem73@gmail.com',
             subject: `New Repair Booking: ${customerName} - ${brand} ${model}`,
             html: `

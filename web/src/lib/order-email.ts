@@ -1,4 +1,5 @@
 import nodemailer from 'nodemailer';
+import { getEmailTransporter } from './email-service';
 
 interface OrderItem {
     productName: string;
@@ -23,13 +24,7 @@ interface OrderEmailData {
 }
 
 export async function sendOrderConfirmationEmail(data: OrderEmailData) {
-    const transporter = nodemailer.createTransport({
-        service: 'gmail',
-        auth: {
-            user: process.env.EMAIL_USER,
-            pass: process.env.EMAIL_PASS,
-        },
-    });
+    const { transporter, user } = getEmailTransporter('order');
 
     const itemsHtml = data.items
         .map(
@@ -109,7 +104,7 @@ export async function sendOrderConfirmationEmail(data: OrderEmailData) {
 
     try {
         await transporter.sendMail({
-            from: `"Lakemba Mobile King" <${process.env.EMAIL_USER}>`,
+            from: `"Lakemba Mobile King" <${user}>`,
             to: data.customerEmail,
             subject: `Order Confirmation - ${data.orderNumber}`,
             html: htmlContent,
@@ -123,13 +118,7 @@ export async function sendOrderConfirmationEmail(data: OrderEmailData) {
 }
 
 export async function sendShippedConfirmationEmail(data: OrderEmailData) {
-    const transporter = nodemailer.createTransport({
-        service: 'gmail',
-        auth: {
-            user: process.env.EMAIL_USER,
-            pass: process.env.EMAIL_PASS,
-        },
-    });
+    const { transporter, user } = getEmailTransporter('order');
 
     const providerMap: Record<string, string> = {
         'aus_post': 'Australia Post',
@@ -197,7 +186,7 @@ export async function sendShippedConfirmationEmail(data: OrderEmailData) {
 
     try {
         await transporter.sendMail({
-            from: `"Lakemba Mobile King" <${process.env.EMAIL_USER}>`,
+            from: `"Lakemba Mobile King" <${user}>`,
             to: data.customerEmail,
             subject: `Shipping Confirmation - Your order ${data.orderNumber} is on its way!`,
             html: htmlContent,
