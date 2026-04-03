@@ -95,10 +95,10 @@ export default function Hero() {
                             transition={{ duration: 0.6, delay: 0.4 }}
                             className="flex flex-col sm:flex-row gap-4 mt-8 w-full lg:w-auto"
                         >
-                            <Link href="/shop" className="bg-[#e6d430] text-black font-bold py-3.5 px-8 rounded-xl hover:brightness-105 transition-all text-center shadow-[0_4px_14px_rgba(230,212,48,0.4)]">
+                            <Link href="/shop" className="bg-[#265795] text-white font-bold py-3.5 px-8 rounded-xl hover:bg-[#1e4578] transition-all text-center shadow-[0_4px_14px_rgba(38,87,149,0.35)] hover:shadow-[0_6px_20px_rgba(38,87,149,0.45)]" style={{ fontFamily: 'var(--font-outfit)' }}>
                                 Shop Accessories
                             </Link>
-                            <Link href="/services" className="bg-[#e6d430] text-black font-bold py-3.5 px-8 rounded-xl hover:brightness-105 transition-all text-center shadow-[0_4px_14px_rgba(230,212,48,0.4)]">
+                            <Link href="/services" className="bg-[#e6d430] text-[#1a1a2e] font-bold py-3.5 px-8 rounded-xl hover:brightness-105 transition-all text-center shadow-[0_4px_14px_rgba(230,212,48,0.4)]" style={{ fontFamily: 'var(--font-outfit)' }}>
                                 Our Services
                             </Link>
                         </motion.div>

@@ -44,6 +44,7 @@ export default function ServicesGrid() {
                         whileInView={{ opacity: 1, y: 0 }}
                         viewport={{ once: true }}
                         className="text-3xl md:text-5xl font-extrabold mb-6 text-gray-900 tracking-tight"
+                        style={{ fontFamily: 'var(--font-outfit)' }}
                     >
                         Expert Repairs for Every Device
                     </motion.h2>

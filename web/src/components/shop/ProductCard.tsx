@@ -135,7 +135,7 @@ export default function ProductCard({
                     )}
 
                     <Link href={`/shop/${slug}`} className="block mb-2 group-hover:text-brand-blue transition-colors">
-                        <h3 className="font-bold text-gray-900 text-[13px] leading-snug" title={name}>
+                        <h3 className="font-bold text-gray-900 text-sm leading-snug" title={name} style={{ fontFamily: 'var(--font-outfit)' }}>
                             {name}
                         </h3>
                     </Link>

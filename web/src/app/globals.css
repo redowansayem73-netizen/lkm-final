@@ -1,14 +1,21 @@
 @import "tailwindcss";
 
+/* ── LKM Brand Design System ─────────────────────────────── */
 :root {
   --background: #ffffff;
-  --foreground: #171717;
+  --foreground: #1a1a2e;
+  --brand-blue: #265795;
+  --brand-yellow: #FFCC00;
+  --brand-navy: #1a1a2e;
+  --text-body: #4a5568;
+  --text-muted: #718096;
+  --surface: #f8fafc;
 }
 
 @theme inline {
   --color-background: var(--background);
   --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
+  --font-sans: var(--font-inter);
   --font-mono: var(--font-geist-mono);
   --color-brand-blue: #0056b3;
   --color-brand-yellow: #FFCC00;
@@ -16,20 +23,59 @@
   --color-secondary: var(--color-brand-yellow);
 }
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
-  }
+/* ── Smooth Scrolling ──────────────────────────────────────── */
+html {
+  scroll-behavior: smooth;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  text-rendering: optimizeLegibility;
 }
 
+/* ── Base Typography ───────────────────────────────────────── */
 body {
   background: var(--background);
   color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+  font-family: var(--font-inter), 'Inter', system-ui, -apple-system, sans-serif;
+  line-height: 1.6;
+  letter-spacing: -0.01em;
 }
 
-/* Ensure all form inputs have black text */
+/* ── Page Enter Animation ──────────────────────────────────── */
+@keyframes pageEnter {
+  from {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.page-enter {
+  animation: pageEnter 0.4s ease-out both;
+}
+
+/* ── Fade-in for sections (scroll reveal helper) ───────────── */
+@keyframes fadeInUp {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.animate-fade-in-up {
+  animation: fadeInUp 0.6s ease-out both;
+}
+
+/* ── Force Light Mode (disable dark mode) ──────────────────── */
+/* Business storefront — always light */
+
+/* ── Form Inputs ───────────────────────────────────────────── */
 input,
 textarea,
 select {
@@ -41,7 +87,7 @@ textarea::placeholder {
   color: #9ca3af !important;
 }
 
-/* Custom slim scrollbar for sidebar */
+/* ── Premium Scrollbar ─────────────────────────────────────── */
 .custom-scrollbar::-webkit-scrollbar {
   width: 4px;
 }
@@ -51,15 +97,37 @@ textarea::placeholder {
 }
 
 .custom-scrollbar::-webkit-scrollbar-thumb {
-  background: #e5e7eb;
+  background: #cbd5e1;
   border-radius: 99px;
 }
 
 .custom-scrollbar::-webkit-scrollbar-thumb:hover {
-  background: #d1d5db;
+  background: #94a3b8;
 }
 
 .custom-scrollbar {
   scrollbar-width: thin;
-  scrollbar-color: #e5e7eb transparent;
+  scrollbar-color: #cbd5e1 transparent;
+}
+
+/* ── No Scrollbar Utility ──────────────────────────────────── */
+.no-scrollbar::-webkit-scrollbar {
+  display: none;
+}
+
+.no-scrollbar {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
+
+/* ── Selection Color ───────────────────────────────────────── */
+::selection {
+  background: #265795;
+  color: #ffffff;
+}
+
+/* ── Focus Ring ────────────────────────────────────────────── */
+:focus-visible {
+  outline: 2px solid #265795;
+  outline-offset: 2px;
 }

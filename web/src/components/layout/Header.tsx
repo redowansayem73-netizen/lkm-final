@@ -140,7 +140,7 @@ export default function Header({ className = '' }: { className?: string }) {
                         </Link>
 
                         {/* Desktop Navigation */}
-                        <nav className="hidden lg:flex items-center space-x-8 font-medium transition-colors text-black">
+                        <nav className="hidden lg:flex items-center space-x-8 font-medium transition-colors text-gray-800" style={{ fontFamily: 'var(--font-outfit)', letterSpacing: '0.01em' }}>
                             {isShopPage ? (
                                 <>
                                     <Link href="/shop" className="hover:text-[#265795] font-bold transition">All Products</Link>

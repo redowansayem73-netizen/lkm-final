@@ -51,7 +51,7 @@ export default function StoreHero() {
         <section className="relative w-full min-h-[500px] md:min-h-[600px] bg-white flex flex-col items-center justify-center py-12 px-4 overflow-hidden font-poppins">
 
             {/* Typography */}
-            <h1 className="text-4xl md:text-5xl lg:text-6xl font-medium text-gray-900 mb-10 text-center tracking-tight">
+            <h1 className="text-4xl md:text-5xl lg:text-6xl font-medium text-gray-900 mb-10 text-center tracking-tight" style={{ fontFamily: 'var(--font-outfit)' }}>
                 Elevate Your Tech.
             </h1>
 

@@ -17,7 +17,6 @@ const categories = [
         bgLight: 'bg-blue-50',
         textColor: 'text-blue-600',
         description: 'Latest iPhone cases',
-        productCount: 500
     },
     {
         name: 'Audio',
@@ -27,7 +26,6 @@ const categories = [
         bgLight: 'bg-purple-50',
         textColor: 'text-purple-600',
         description: 'Earbuds & Headphones',
-        productCount: 71
     },
     {
         name: 'Power Banks',
@@ -37,7 +35,6 @@ const categories = [
         bgLight: 'bg-emerald-50',
         textColor: 'text-emerald-600',
         description: 'Portable charging',
-        productCount: 69
     },
     {
         name: 'Apple Cables',
@@ -47,7 +44,6 @@ const categories = [
         bgLight: 'bg-sky-50',
         textColor: 'text-sky-600',
         description: 'Lightning & USB-C',
-        productCount: 80
     },
     {
         name: 'Stands & Mounts',
@@ -57,7 +53,6 @@ const categories = [
         bgLight: 'bg-amber-50',
         textColor: 'text-amber-600',
         description: 'Phone & tablet stands',
-        productCount: 60
     },
     {
         name: 'Car Accessories',
@@ -67,7 +62,6 @@ const categories = [
         bgLight: 'bg-slate-50',
         textColor: 'text-slate-600',
         description: 'Mounts & chargers',
-        productCount: 56
     },
     {
         name: 'Wall Chargers',
@@ -77,7 +71,6 @@ const categories = [
         bgLight: 'bg-rose-50',
         textColor: 'text-rose-600',
         description: 'Fast charge adapters',
-        productCount: 31
     },
     {
         name: 'Speakers',
@@ -87,7 +80,6 @@ const categories = [
         bgLight: 'bg-orange-50',
         textColor: 'text-orange-600',
         description: 'Bluetooth speakers',
-        productCount: 17
     },
     {
         name: 'HDMI Cables',
@@ -97,7 +89,6 @@ const categories = [
         bgLight: 'bg-indigo-50',
         textColor: 'text-indigo-600',
         description: 'Display cables',
-        productCount: 20
     },
     {
         name: 'USB Cables',
@@ -107,7 +98,6 @@ const categories = [
         bgLight: 'bg-teal-50',
         textColor: 'text-teal-600',
         description: 'Micro USB & more',
-        productCount: 21
     },
     {
         name: 'Watch Accessories',
@@ -117,7 +107,6 @@ const categories = [
         bgLight: 'bg-fuchsia-50',
         textColor: 'text-fuchsia-600',
         description: 'Bands & chargers',
-        productCount: 19
     },
     {
         name: 'Wireless Chargers',
@@ -127,7 +116,6 @@ const categories = [
         bgLight: 'bg-yellow-50',
         textColor: 'text-yellow-600',
         description: 'MagSafe & Qi pads',
-        productCount: 12
     },
 ];
 
@@ -140,7 +128,7 @@ function CategoryCard({ category }: { category: Category }) {
             className="group relative flex flex-col items-center text-center"
         >
             {/* Icon container */}
-            <div className={`relative w-16 h-16 md:w-20 md:h-20 rounded-2xl ${category.bgLight} flex items-center justify-center mb-3 transition-all duration-300 group-hover:scale-110 group-hover:shadow-lg group-hover:shadow-${category.textColor}/20 overflow-hidden`}>
+            <div className={`relative w-16 h-16 md:w-20 md:h-20 rounded-2xl ${category.bgLight} flex items-center justify-center mb-3 transition-all duration-300 group-hover:scale-110 group-hover:shadow-lg overflow-hidden`}>
                 {/* Gradient overlay on hover */}
                 <div className={`absolute inset-0 bg-gradient-to-br ${category.color} opacity-0 group-hover:opacity-100 transition-opacity duration-300 rounded-2xl`} />
                 
@@ -149,13 +137,8 @@ function CategoryCard({ category }: { category: Category }) {
             </div>
 
             {/* Name */}
-            <span className="text-sm font-semibold text-gray-800 group-hover:text-brand-blue transition-colors duration-200 leading-tight">
+            <span className="text-sm font-semibold text-gray-800 group-hover:text-[#265795] transition-colors duration-200 leading-tight" style={{ fontFamily: 'var(--font-outfit)' }}>
                 {category.name}
-            </span>
-
-            {/* Product count */}
-            <span className="text-[11px] text-gray-400 mt-0.5 font-medium">
-                {category.productCount}+ items
             </span>
         </Link>
     );
@@ -170,26 +153,17 @@ export default function FeaturedCategories() {
     return (
         <section className="py-10 md:py-14 bg-white" aria-label="Shop by Category">
             <div className="container mx-auto px-4">
-                {/* Section Header */}
-                <div className="flex items-center justify-between mb-8 md:mb-10">
-                    <div>
-                        <h2 className="text-2xl md:text-3xl font-bold">
-                            <span className="text-gray-900">Shop by </span>
-                            <span className="text-brand-blue">Category</span>
-                        </h2>
-                        <p className="text-gray-400 text-sm mt-1 hidden md:block">Browse our most popular collections</p>
-                    </div>
-                    <Link
-                        href="/products"
-                        className="hidden md:flex items-center gap-1 text-sm font-semibold text-brand-blue hover:text-blue-700 transition-colors"
-                    >
-                        View All
-                        <ChevronRight className="w-4 h-4" />
-                    </Link>
+                {/* Section Header — Centered on desktop */}
+                <div className="flex flex-col items-center text-center mb-8 md:mb-10">
+                    <h2 className="text-2xl md:text-3xl font-bold" style={{ fontFamily: 'var(--font-outfit)' }}>
+                        <span className="text-gray-900">Shop by </span>
+                        <span className="text-[#265795]">Category</span>
+                    </h2>
+                    <p className="text-gray-400 text-sm mt-1.5 hidden md:block">Browse our most popular collections</p>
                 </div>
 
-                {/* Desktop Grid - 6 columns */}
-                <div className="hidden md:grid grid-cols-6 gap-6 lg:gap-8">
+                {/* Desktop Grid - 6 columns, centered */}
+                <div className="hidden md:grid grid-cols-6 gap-6 lg:gap-8 max-w-5xl mx-auto">
                     {categories.map((category) => (
                         <CategoryCard key={category.slug} category={category} />
                     ))}
@@ -214,6 +188,18 @@ export default function FeaturedCategories() {
                         </button>
                     </div>
                 )}
+
+                {/* View All link for desktop */}
+                <div className="hidden md:flex justify-center mt-8">
+                    <Link
+                        href="/products"
+                        className="inline-flex items-center gap-1.5 text-sm font-semibold text-[#265795] hover:text-blue-700 transition-colors"
+                        style={{ fontFamily: 'var(--font-outfit)' }}
+                    >
+                        View All Products
+                        <ChevronRight className="w-4 h-4" />
+                    </Link>
+                </div>
             </div>
         </section>
     );

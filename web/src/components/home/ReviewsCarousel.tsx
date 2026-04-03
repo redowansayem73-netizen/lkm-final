@@ -40,7 +40,7 @@ export default function ReviewsCarousel() {
                     </div>
                     <span className="font-bold text-gray-700">Google Reviews</span>
                 </div>
-                <h2 className="text-3xl md:text-4xl font-bold text-gray-900 mb-2">Our Customers Love Us</h2>
+                <h2 className="text-3xl md:text-4xl font-bold text-gray-900 mb-2" style={{ fontFamily: 'var(--font-outfit)' }}>Our Customers Love Us</h2>
                 <div className="flex items-center justify-center gap-1 text-yellow-400">
                     <span className="font-bold text-gray-900 mr-2 text-xl">5.0</span>
                     {[...Array(5)].map((_, i) => (

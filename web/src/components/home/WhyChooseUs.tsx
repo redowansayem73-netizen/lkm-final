@@ -53,7 +53,8 @@ export default function WhyChooseUs() {
                             initial={{ opacity: 0, x: -20 }}
                             whileInView={{ opacity: 1, x: 0 }}
                             viewport={{ once: true }}
-                            className="text-brand-yellow font-bold tracking-wider uppercase text-sm mb-4 block"
+                            className="text-[#265795] font-bold tracking-wider uppercase text-sm mb-4 block"
+                            style={{ fontFamily: 'var(--font-outfit)' }}
                         >
                             Why Choose Lakemba Mobile King?
                         </motion.span>
@@ -63,6 +64,7 @@ export default function WhyChooseUs() {
                             viewport={{ once: true }}
                             transition={{ delay: 0.1 }}
                             className="text-4xl lg:text-5xl font-bold text-gray-900 mb-6 leading-tight"
+                            style={{ fontFamily: 'var(--font-outfit)' }}
                         >
                             We treat your device <br /> like it's our own.
                         </motion.h2>
