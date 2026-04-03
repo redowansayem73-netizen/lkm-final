@@ -105,15 +105,28 @@ export async function GET(request: Request) {
             }
         }
 
+        const sort = searchParams.get('sort');
+
         // Total count for pagination
         const totalResult = await db.select({ count: db.$count(products) }).from(products)
             .where(and(eq(products.isActive, true), ...conditions));
         const totalCount = totalResult[0]?.count || 0;
 
-        const allProducts = await db.select().from(products)
-            .where(and(eq(products.isActive, true), ...conditions))
-            .limit(limit)
-            .offset(offset);
+        // Build query with sort
+        const whereClause = and(eq(products.isActive, true), ...conditions);
+
+        let allProducts;
+        if (sort === 'newest') {
+            allProducts = await db.select().from(products).where(whereClause).orderBy(sql`${products.id} DESC`).limit(limit).offset(offset);
+        } else if (sort === 'price-asc') {
+            allProducts = await db.select().from(products).where(whereClause).orderBy(sql`CAST(${products.price} AS DECIMAL(10,2)) ASC`).limit(limit).offset(offset);
+        } else if (sort === 'price-desc') {
+            allProducts = await db.select().from(products).where(whereClause).orderBy(sql`CAST(${products.price} AS DECIMAL(10,2)) DESC`).limit(limit).offset(offset);
+        } else if (sort === 'name') {
+            allProducts = await db.select().from(products).where(whereClause).orderBy(products.name).limit(limit).offset(offset);
+        } else {
+            allProducts = await db.select().from(products).where(whereClause).limit(limit).offset(offset);
+        }
 
         // Fetch variants for all products
         let allVariants: any[] = [];

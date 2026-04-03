@@ -136,8 +136,6 @@ export default function ProductDetail({ product }: { product: Product }) {
         ? Math.round(((displayComparePrice - displayPrice) / displayComparePrice) * 100)
         : 0;
 
-    // Afterpay calculation (4 payments)
-    const afterpayAmount = (displayPrice / 4).toFixed(2);
 
     // Handle scroll for sticky bar
     useEffect(() => {
@@ -304,11 +302,6 @@ export default function ProductDetail({ product }: { product: Product }) {
                                 )}
                             </div>
 
-                            {/* Afterpay Badge - Inline */}
-                            <div className="flex items-center gap-1.5 text-xs text-gray-500 bg-gray-50 p-2 rounded-lg border border-gray-100 w-fit">
-                                <span className="font-bold border border-black px-1 rounded bg-white text-black text-[10px]">A</span>
-                                <span>or 4 of <strong>${afterpayAmount}</strong> with <strong>Afterpay</strong></span>
-                            </div>
                         </div>
 
                         {/* Variant Selectors */}

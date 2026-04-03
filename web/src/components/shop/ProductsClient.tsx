@@ -77,6 +77,8 @@ export default function ProductsClient({ initialBrands, initialCategories }: Sho
     const initialActiveCategories = initialCategoryParam ? initialCategoryParam.split(',').filter(Boolean) : [];
     const initialBrand = searchParams.get('brand') || "";
 
+    const initialSort = searchParams.get('sort') || "default";
+
     const [products, setProducts] = useState<Product[]>([]);
     const [loading, setLoading] = useState(true);
     const [activeCategories, setActiveCategories] = useState<string[]>(initialActiveCategories);
@@ -85,7 +87,7 @@ export default function ProductsClient({ initialBrands, initialCategories }: Sho
     const [currentPage, setCurrentPage] = useState(1);
     const [totalPages, setTotalPages] = useState(1);
     const [totalCount, setTotalCount] = useState(0);
-    const [sortBy, setSortBy] = useState("default");
+    const [sortBy, setSortBy] = useState(initialSort);
     const [sidebarOpen, setSidebarOpen] = useState(false);
 
     // New filter state
@@ -134,6 +136,7 @@ export default function ProductsClient({ initialBrands, initialCategories }: Sho
             if (activeTags.length > 0) url += `&tags=${activeTags.join(',')}`;
             if (priceRange[0] > 0) url += `&minPrice=${priceRange[0]}`;
             if (priceRange[1] < Infinity) url += `&maxPrice=${priceRange[1]}`;
+            if (sortBy && sortBy !== 'default') url += `&sort=${sortBy}`;
 
             const res = await fetch(url);
             if (res.ok) {
@@ -470,6 +473,7 @@ export default function ProductsClient({ initialBrands, initialCategories }: Sho
                                             className="h-10 pl-3 pr-8 bg-white border border-gray-200 rounded-xl text-sm font-medium text-gray-700 outline-none hover:border-brand-blue focus:border-brand-blue focus:ring-2 focus:ring-blue-50 transition-all appearance-none cursor-pointer shadow-sm"
                                         >
                                             <option value="default">Sort: Default</option>
+                                            <option value="newest">Newest First</option>
                                             <option value="price-asc">Price: Low to High</option>
                                             <option value="price-desc">Price: High to Low</option>
                                             <option value="name">Name: A–Z</option>

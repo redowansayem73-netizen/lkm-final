@@ -2,67 +2,160 @@
 
 import { useState } from 'react';
 import Link from 'next/link';
-import Image from 'next/image';
 import {
-    Headphones, Speaker, Watch,
-    Pen, Plug, Cable, BatteryCharging, Usb, Wifi
+    Headphones, Speaker, Watch, Plug, Cable, BatteryCharging, Smartphone,
+    Car, Monitor, Usb, Zap, MapPin, ChevronRight
 } from 'lucide-react';
 
-// Category data with icons or images
+// Categories mapped from actual DB data with premium icons
 const categories = [
-    { name: 'Mobile Phone', slug: 'mobile-phone', image: '/categories/mobile-phone.jpg' },
-    { name: 'Tablet', slug: 'tablet', image: '/categories/tablet.jpg' },
-    { name: 'Laptop', slug: 'laptop', image: '/categories/laptop.jpg' },
-    { name: 'AirPods', slug: 'airpods', image: '/categories/airpods.jpg' },
-    { name: 'Wireless Headphone', slug: 'wireless-headphone', image: '/categories/wireless-headphone.jpg' },
-    { name: 'Wired Headphone', slug: 'wired-headphone', image: '/categories/wired-headphone.jpg' },
-    { name: 'Headphone', slug: 'headphone', image: '/categories/headphone.jpg' },
-    { name: 'Speakers', slug: 'speakers', image: '/categories/speakers.jpg' },
-    { name: 'Starlink', slug: 'starlink', image: '/categories/starlink.png' },
-    { name: 'Smart Watch', slug: 'smart-watch', image: '/categories/smart-watch.jpg' },
-    { name: 'Smart Pen', slug: 'smart-pen', image: '/categories/smart-pen.jpg' },
-    { name: 'Power Adapter', slug: 'power-adapter', image: '/categories/power-adapter.jpg' },
-    { name: 'Cables', slug: 'cables', image: '/categories/cables.jpg' },
-    { name: 'Power Bank', slug: 'power-bank', image: '/categories/power-bank.jpg' },
-    { name: 'Hubs & Docks', slug: 'hubs-docks', image: '/categories/hubs-docks.jpg' },
-    { name: 'Wireless Charger', slug: 'wireless-charger', icon: BatteryCharging },
+    {
+        name: 'Phone Cases',
+        slug: 'iphone-17-pro',
+        icon: Smartphone,
+        color: 'from-blue-500 to-indigo-600',
+        bgLight: 'bg-blue-50',
+        textColor: 'text-blue-600',
+        description: 'Latest iPhone cases',
+        productCount: 500
+    },
+    {
+        name: 'Audio',
+        slug: 'audio',
+        icon: Headphones,
+        color: 'from-purple-500 to-violet-600',
+        bgLight: 'bg-purple-50',
+        textColor: 'text-purple-600',
+        description: 'Earbuds & Headphones',
+        productCount: 71
+    },
+    {
+        name: 'Power Banks',
+        slug: 'power-bank',
+        icon: BatteryCharging,
+        color: 'from-emerald-500 to-teal-600',
+        bgLight: 'bg-emerald-50',
+        textColor: 'text-emerald-600',
+        description: 'Portable charging',
+        productCount: 69
+    },
+    {
+        name: 'Apple Cables',
+        slug: 'cables-for-apple',
+        icon: Cable,
+        color: 'from-sky-500 to-cyan-600',
+        bgLight: 'bg-sky-50',
+        textColor: 'text-sky-600',
+        description: 'Lightning & USB-C',
+        productCount: 80
+    },
+    {
+        name: 'Stands & Mounts',
+        slug: 'stand-mount',
+        icon: MapPin,
+        color: 'from-amber-500 to-orange-600',
+        bgLight: 'bg-amber-50',
+        textColor: 'text-amber-600',
+        description: 'Phone & tablet stands',
+        productCount: 60
+    },
+    {
+        name: 'Car Accessories',
+        slug: 'car-accessories',
+        icon: Car,
+        color: 'from-slate-600 to-gray-700',
+        bgLight: 'bg-slate-50',
+        textColor: 'text-slate-600',
+        description: 'Mounts & chargers',
+        productCount: 56
+    },
+    {
+        name: 'Wall Chargers',
+        slug: 'wall-chargers',
+        icon: Plug,
+        color: 'from-rose-500 to-pink-600',
+        bgLight: 'bg-rose-50',
+        textColor: 'text-rose-600',
+        description: 'Fast charge adapters',
+        productCount: 31
+    },
+    {
+        name: 'Speakers',
+        slug: 'speakers',
+        icon: Speaker,
+        color: 'from-orange-500 to-red-600',
+        bgLight: 'bg-orange-50',
+        textColor: 'text-orange-600',
+        description: 'Bluetooth speakers',
+        productCount: 17
+    },
+    {
+        name: 'HDMI Cables',
+        slug: 'hdmi-cables',
+        icon: Monitor,
+        color: 'from-indigo-500 to-blue-600',
+        bgLight: 'bg-indigo-50',
+        textColor: 'text-indigo-600',
+        description: 'Display cables',
+        productCount: 20
+    },
+    {
+        name: 'USB Cables',
+        slug: 'micro-usb-cables',
+        icon: Usb,
+        color: 'from-teal-500 to-emerald-600',
+        bgLight: 'bg-teal-50',
+        textColor: 'text-teal-600',
+        description: 'Micro USB & more',
+        productCount: 21
+    },
+    {
+        name: 'Watch Accessories',
+        slug: 'watch-accessories',
+        icon: Watch,
+        color: 'from-fuchsia-500 to-purple-600',
+        bgLight: 'bg-fuchsia-50',
+        textColor: 'text-fuchsia-600',
+        description: 'Bands & chargers',
+        productCount: 19
+    },
+    {
+        name: 'Wireless Chargers',
+        slug: 'Wireless-Charger',
+        icon: Zap,
+        color: 'from-yellow-500 to-amber-600',
+        bgLight: 'bg-yellow-50',
+        textColor: 'text-yellow-600',
+        description: 'MagSafe & Qi pads',
+        productCount: 12
+    },
 ];
 
-// Type for category
-type Category = {
-    name: string;
-    slug: string;
-    image?: string;
-    icon?: React.ComponentType<{ className?: string }>;
-};
+type Category = typeof categories[0];
 
-// Category Item Component
-function CategoryItem({ category, size = 'desktop' }: { category: Category; size?: 'desktop' | 'mobile' }) {
-    const iconSize = size === 'desktop' ? 'w-12 h-12 md:w-14 md:h-14' : 'w-10 h-10';
-    const containerSize = size === 'desktop' ? 'w-16 h-16 md:w-[72px] md:h-[72px]' : 'w-14 h-14';
-    const textSize = size === 'desktop' ? 'text-sm' : 'text-xs';
-    const padding = size === 'desktop' ? 'p-4' : 'p-3';
-    const marginBottom = size === 'desktop' ? 'mb-3' : 'mb-2';
-
+function CategoryCard({ category }: { category: Category }) {
     return (
         <Link
             href={`/products?category=${category.slug}`}
-            className={`group flex flex-col items-center justify-center ${padding} rounded-xl transition-all duration-300 cursor-pointer`}
-            aria-label={`Browse ${category.name}`}
+            className="group relative flex flex-col items-center text-center"
         >
-            <div className={`${containerSize} flex items-center justify-center ${marginBottom}`}>
-                {category.image ? (
-                    <img
-                        src={category.image}
-                        alt={category.name}
-                        className="w-full h-full object-contain"
-                    />
-                ) : category.icon ? (
-                    <category.icon className={`${iconSize} stroke-[1.5] text-[#1B1949] transition-colors`} />
-                ) : null}
+            {/* Icon container */}
+            <div className={`relative w-16 h-16 md:w-20 md:h-20 rounded-2xl ${category.bgLight} flex items-center justify-center mb-3 transition-all duration-300 group-hover:scale-110 group-hover:shadow-lg group-hover:shadow-${category.textColor}/20 overflow-hidden`}>
+                {/* Gradient overlay on hover */}
+                <div className={`absolute inset-0 bg-gradient-to-br ${category.color} opacity-0 group-hover:opacity-100 transition-opacity duration-300 rounded-2xl`} />
+                
+                {/* Icon */}
+                <category.icon className={`relative z-10 w-7 h-7 md:w-9 md:h-9 ${category.textColor} group-hover:text-white transition-colors duration-300 stroke-[1.5]`} />
             </div>
-            <span className={`${textSize} font-medium text-black text-center leading-tight`}>
+
+            {/* Name */}
+            <span className="text-sm font-semibold text-gray-800 group-hover:text-brand-blue transition-colors duration-200 leading-tight">
                 {category.name}
+            </span>
+
+            {/* Product count */}
+            <span className="text-[11px] text-gray-400 mt-0.5 font-medium">
+                {category.productCount}+ items
             </span>
         </Link>
     );
@@ -75,43 +168,49 @@ export default function FeaturedCategories() {
     const mobileCategories = showAll ? categories : categories.slice(0, 6);
 
     return (
-        <section className="py-10 bg-white" aria-label="Featured Categories">
+        <section className="py-10 md:py-14 bg-white" aria-label="Shop by Category">
             <div className="container mx-auto px-4">
-                {/* Section Title */}
-                <h2 className="text-2xl md:text-3xl font-bold mb-8 md:mb-10 text-center">
-                    <span className="text-[#1B1949]">Featured </span>
-                    <span className="text-brand-blue">
-                        Categories
-                    </span>
-                </h2>
+                {/* Section Header */}
+                <div className="flex items-center justify-between mb-8 md:mb-10">
+                    <div>
+                        <h2 className="text-2xl md:text-3xl font-bold">
+                            <span className="text-gray-900">Shop by </span>
+                            <span className="text-brand-blue">Category</span>
+                        </h2>
+                        <p className="text-gray-400 text-sm mt-1 hidden md:block">Browse our most popular collections</p>
+                    </div>
+                    <Link
+                        href="/products"
+                        className="hidden md:flex items-center gap-1 text-sm font-semibold text-brand-blue hover:text-blue-700 transition-colors"
+                    >
+                        View All
+                        <ChevronRight className="w-4 h-4" />
+                    </Link>
+                </div>
 
-                {/* Desktop Grid - 8 columns */}
-                <ul className="hidden md:grid grid-cols-8 gap-6">
+                {/* Desktop Grid - 6 columns */}
+                <div className="hidden md:grid grid-cols-6 gap-6 lg:gap-8">
                     {categories.map((category) => (
-                        <li key={category.slug}>
-                            <CategoryItem category={category} size="desktop" />
-                        </li>
+                        <CategoryCard key={category.slug} category={category} />
                     ))}
-                </ul>
+                </div>
 
                 {/* Mobile Grid - 3 columns */}
-                <ul className="grid grid-cols-3 gap-4 md:hidden">
+                <div className="grid grid-cols-3 gap-4 md:hidden">
                     {mobileCategories.map((category) => (
-                        <li key={category.slug}>
-                            <CategoryItem category={category} size="mobile" />
-                        </li>
+                        <CategoryCard key={category.slug} category={category} />
                     ))}
-                </ul>
+                </div>
 
-                {/* Mobile "See All Categories" Button */}
+                {/* Mobile "See All" Button */}
                 {!showAll && (
-                    <div className="mt-6 text-center md:hidden">
+                    <div className="mt-8 text-center md:hidden">
                         <button
                             onClick={() => setShowAll(true)}
-                            className="text-[#1B1949] font-medium underline underline-offset-4 hover:text-orange-500 transition-colors"
-                            aria-label="See all categories"
+                            className="inline-flex items-center gap-2 px-6 py-2.5 bg-gray-100 text-gray-700 rounded-full text-sm font-semibold hover:bg-gray-200 active:scale-95 transition-all"
                         >
-                            See All Categories
+                            Show All Categories
+                            <ChevronRight className="w-4 h-4" />
                         </button>
                     </div>
                 )}

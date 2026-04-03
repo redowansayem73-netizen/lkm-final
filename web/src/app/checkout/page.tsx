@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef, useCallback } from "react";
 import Image from "next/image";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
@@ -19,11 +19,40 @@ import {
     Loader2,
     AlertCircle,
     Store,
-    MapPin
+    MapPin,
+    X
 } from "lucide-react";
 import { useCart } from "@/context/CartContext";
 import { loadStripe } from "@stripe/stripe-js";
 import { Elements, PaymentElement, useStripe, useElements } from "@stripe/react-stripe-js";
+
+// Toast notification component
+function Toast({ message, type, onClose }: { message: string; type: 'error' | 'success' | 'info'; onClose: () => void }) {
+    useEffect(() => {
+        const timer = setTimeout(onClose, 6000);
+        return () => clearTimeout(timer);
+    }, [onClose]);
+
+    const bgColor = type === 'error' ? 'bg-red-600' : type === 'success' ? 'bg-green-600' : 'bg-brand-blue';
+    const icon = type === 'error' ? '⚠️' : type === 'success' ? '✅' : 'ℹ️';
+
+    return (
+        <div className={`fixed bottom-6 left-1/2 -translate-x-1/2 z-[100] ${bgColor} text-white px-6 py-4 rounded-2xl shadow-2xl flex items-center gap-3 max-w-md w-[90vw] animate-slide-up`}>
+            <span className="text-xl flex-shrink-0">{icon}</span>
+            <p className="text-sm font-medium flex-1">{message}</p>
+            <button onClick={onClose} className="flex-shrink-0 opacity-70 hover:opacity-100 transition">
+                <X className="w-4 h-4" />
+            </button>
+            <style jsx>{`
+                @keyframes slide-up {
+                    from { transform: translate(-50%, 100%); opacity: 0; }
+                    to { transform: translate(-50%, 0); opacity: 1; }
+                }
+                .animate-slide-up { animation: slide-up 0.35s ease-out; }
+            `}</style>
+        </div>
+    );
+}
 
 interface ShippingZone {
     id: number;
@@ -48,11 +77,12 @@ interface CheckoutSettings {
 }
 
 // Stripe Payment Form Component
-function StripePaymentForm({ clientSecret, onSuccess, onError, checkoutData }: {
+function StripePaymentForm({ clientSecret, onSuccess, onError, checkoutData, grandTotal }: {
     clientSecret: string;
     onSuccess: (orderNumber: string) => void;
     onError: (message: string) => void;
     checkoutData: any;
+    grandTotal: number;
 }) {
     const stripe = useStripe();
     const elements = useElements();
@@ -73,10 +103,26 @@ function StripePaymentForm({ clientSecret, onSuccess, onError, checkoutData }: {
         });
 
         if (error) {
-            onError(error.message || "Payment failed");
+            // Provide user-friendly decline messages
+            let friendlyMessage = 'Payment failed. ';
+            if (error.type === 'card_error') {
+                switch (error.decline_code) {
+                    case 'insufficient_funds':
+                        friendlyMessage += 'Insufficient funds. Please try another card.';
+                        break;
+                    case 'lost_card':
+                    case 'stolen_card':
+                        friendlyMessage += 'This card cannot be used. Please try another card.';
+                        break;
+                    default:
+                        friendlyMessage += (error.message || 'Your card was declined. Please try again with a different card.');
+                }
+            } else {
+                friendlyMessage += (error.message || 'Something went wrong. Please try again.');
+            }
+            onError(friendlyMessage);
             setProcessing(false);
         } else if (paymentIntent && paymentIntent.status === "succeeded") {
-            // Payment succeeded! Create order client-side (fallback for local dev without webhooks)
             try {
                 const orderData = {
                     ...checkoutData,
@@ -93,7 +139,6 @@ function StripePaymentForm({ clientSecret, onSuccess, onError, checkoutData }: {
                 const data = await res.json();
 
                 if (res.ok && data.orderNumber) {
-                    // Update order to paid status
                     await fetch(`/api/orders/${data.orderId}`, {
                         method: "PATCH",
                         headers: { "Content-Type": "application/json" },
@@ -101,7 +146,6 @@ function StripePaymentForm({ clientSecret, onSuccess, onError, checkoutData }: {
                     });
                     onSuccess(data.orderNumber);
                 } else {
-                    // Payment succeeded but order creation failed - still redirect with temp reference
                     onSuccess(checkoutData.tempReference || 'order');
                 }
             } catch (err) {
@@ -115,12 +159,15 @@ function StripePaymentForm({ clientSecret, onSuccess, onError, checkoutData }: {
     };
 
     return (
-        <form onSubmit={handleSubmit} className="space-y-4">
-            <PaymentElement />
+        <form onSubmit={handleSubmit} className="space-y-5">
+            <PaymentElement options={{
+                layout: 'tabs',
+                wallets: { applePay: 'auto', googlePay: 'auto' },
+            }} />
             <button
                 type="submit"
                 disabled={!stripe || processing}
-                className="w-full bg-brand-blue text-white py-4 px-6 rounded-xl font-bold text-lg hover:bg-blue-700 transition-all disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+                className="w-full bg-gradient-to-r from-brand-blue to-blue-700 text-white py-4 px-6 rounded-xl font-bold text-lg hover:from-blue-700 hover:to-blue-800 transition-all disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2 shadow-lg shadow-blue-200/50"
             >
                 {processing ? (
                     <>
@@ -130,10 +177,14 @@ function StripePaymentForm({ clientSecret, onSuccess, onError, checkoutData }: {
                 ) : (
                     <>
                         <Lock className="w-5 h-5" />
-                        Pay Now
+                        Pay ${grandTotal.toFixed(2)} Now
                     </>
                 )}
             </button>
+            <div className="flex items-center justify-center gap-2 text-xs text-gray-400">
+                <Shield className="w-3.5 h-3.5" />
+                <span>256-bit SSL encrypted. Your card details are never stored.</span>
+            </div>
         </form>
     );
 }
@@ -148,6 +199,12 @@ export default function CheckoutPage() {
     const [mounted, setMounted] = useState(false);
     const [orderPlaced, setOrderPlaced] = useState(false);
 
+    // Toast notification
+    const [toast, setToast] = useState<{ message: string; type: 'error' | 'success' | 'info' } | null>(null);
+    const showToast = useCallback((message: string, type: 'error' | 'success' | 'info' = 'error') => {
+        setToast({ message, type });
+    }, []);
+
     // Checkout settings
     const [settings, setSettings] = useState<CheckoutSettings | null>(null);
     const [selectedPaymentMethod, setSelectedPaymentMethod] = useState<string>("stripe");
@@ -159,6 +216,7 @@ export default function CheckoutPage() {
     const [showStripeForm, setShowStripeForm] = useState(false);
     const [pendingOrderNumber, setPendingOrderNumber] = useState<string | null>(null);
     const [pendingCheckoutData, setPendingCheckoutData] = useState<any>(null);
+    const stripeFormRef = useRef<HTMLDivElement>(null);
 
     const [formData, setFormData] = useState({
         name: "",
@@ -340,10 +398,19 @@ export default function CheckoutPage() {
     };
 
     const handleStripeError = (message: string) => {
-        setError(message);
+        showToast(message, 'error');
         setShowStripeForm(false);
         setClientSecret(null);
     };
+
+    // Auto-scroll to Stripe form when it appears (especially on mobile)
+    useEffect(() => {
+        if (showStripeForm && stripeFormRef.current) {
+            setTimeout(() => {
+                stripeFormRef.current?.scrollIntoView({ behavior: 'smooth', block: 'center' });
+            }, 300);
+        }
+    }, [showStripeForm]);
 
 
     // Show loading state during hydration
@@ -651,13 +718,56 @@ export default function CheckoutPage() {
 
                             {/* Stripe Payment Form */}
                             {showStripeForm && clientSecret && stripePromise && pendingCheckoutData && (
-                                <div className="mt-6 p-4 bg-gray-50 rounded-xl">
-                                    <Elements stripe={stripePromise} options={{ clientSecret }}>
+                                <div ref={stripeFormRef} className="mt-6 p-5 bg-gradient-to-b from-slate-50 to-white rounded-xl border border-gray-200">
+                                    <div className="flex items-center gap-2 mb-4 pb-3 border-b border-gray-100">
+                                        <Lock className="w-4 h-4 text-green-600" />
+                                        <span className="text-sm font-semibold text-gray-700">Secure Card Payment</span>
+                                    </div>
+                                    <Elements stripe={stripePromise} options={{
+                                        clientSecret,
+                                        appearance: {
+                                            theme: 'stripe',
+                                            variables: {
+                                                colorPrimary: '#1e3a8a',
+                                                colorBackground: '#ffffff',
+                                                colorText: '#1e293b',
+                                                colorDanger: '#dc2626',
+                                                fontFamily: 'system-ui, sans-serif',
+                                                spacingUnit: '4px',
+                                                borderRadius: '10px',
+                                            },
+                                            rules: {
+                                                '.Input': {
+                                                    border: '1.5px solid #e2e8f0',
+                                                    boxShadow: 'none',
+                                                    padding: '12px 14px',
+                                                },
+                                                '.Input:focus': {
+                                                    border: '1.5px solid #1e3a8a',
+                                                    boxShadow: '0 0 0 3px rgba(30,58,138,0.1)',
+                                                },
+                                                '.Label': {
+                                                    fontWeight: '500',
+                                                    fontSize: '14px',
+                                                    marginBottom: '6px',
+                                                },
+                                                '.Tab': {
+                                                    border: '1.5px solid #e2e8f0',
+                                                    borderRadius: '10px',
+                                                },
+                                                '.Tab--selected': {
+                                                    border: '1.5px solid #1e3a8a',
+                                                    backgroundColor: '#eff6ff',
+                                                },
+                                            },
+                                        },
+                                    }}>
                                         <StripePaymentForm
                                             clientSecret={clientSecret}
                                             onSuccess={handleStripeSuccess}
                                             onError={handleStripeError}
                                             checkoutData={pendingCheckoutData}
+                                            grandTotal={grandTotal}
                                         />
                                     </Elements>
                                 </div>
@@ -711,14 +821,14 @@ export default function CheckoutPage() {
                                             <div className="flex items-center gap-2 mt-1">
                                                 <button
                                                     onClick={() => updateQuantity(item.id, item.quantity - 1)}
-                                                    className="w-6 h-6 rounded bg-gray-100 flex items-center justify-center hover:bg-gray-200"
+                                                    className="w-6 h-6 rounded bg-gray-100 flex items-center justify-center hover:bg-gray-200 text-gray-900"
                                                 >
                                                     <Minus className="w-3 h-3" />
                                                 </button>
-                                                <span className="text-sm font-medium w-6 text-center">{item.quantity}</span>
+                                                <span className="text-sm font-medium w-6 text-center text-gray-900">{item.quantity}</span>
                                                 <button
                                                     onClick={() => updateQuantity(item.id, item.quantity + 1)}
-                                                    className="w-6 h-6 rounded bg-gray-100 flex items-center justify-center hover:bg-gray-200"
+                                                    className="w-6 h-6 rounded bg-gray-100 flex items-center justify-center hover:bg-gray-200 text-gray-900"
                                                 >
                                                     <Plus className="w-3 h-3" />
                                                 </button>
@@ -738,16 +848,16 @@ export default function CheckoutPage() {
                             <div className="space-y-3 pt-4 border-t border-gray-100">
                                 <div className="flex justify-between text-sm">
                                     <span className="text-gray-500">Subtotal</span>
-                                    <span className="font-medium">${subtotal.toFixed(2)}</span>
+                                    <span className="font-medium text-gray-900">${subtotal.toFixed(2)}</span>
                                 </div>
                                 <div className="flex justify-between text-sm">
                                     <span className="text-gray-500">Shipping</span>
-                                    <span className={shipping === 0 ? "text-green-600 font-medium" : "font-medium"}>
+                                    <span className={shipping === 0 ? "text-green-600 font-medium" : "font-medium text-gray-900"}>
                                         {shipping === 0 ? "FREE" : `$${shipping.toFixed(2)}`}
                                     </span>
                                 </div>
                                 <div className="flex justify-between text-lg font-bold pt-3 border-t border-gray-100">
-                                    <span>Total</span>
+                                    <span className="text-brand-blue">Total</span>
                                     <span className="text-brand-blue">${grandTotal.toFixed(2)}</span>
                                 </div>
                             </div>
@@ -800,6 +910,15 @@ export default function CheckoutPage() {
                     </div>
                 </div>
             </main>
+
+            {/* Toast Notification */}
+            {toast && (
+                <Toast
+                    message={toast.message}
+                    type={toast.type}
+                    onClose={() => setToast(null)}
+                />
+            )}
         </div>
     );
 }

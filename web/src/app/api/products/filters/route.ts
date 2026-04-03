@@ -97,9 +97,24 @@ export async function GET(request: Request) {
             .from(products)
             .where(whereClause);
 
+        // Get categories with product counts
+        const categoryResults = await db
+            .select({
+                id: categories.id,
+                name: categories.name,
+                slug: categories.slug,
+                count: sql<number>`COUNT(${products.id})`,
+            })
+            .from(categories)
+            .leftJoin(products, and(eq(products.categoryId, categories.id), eq(products.isActive, true)))
+            .groupBy(categories.id, categories.name, categories.slug)
+            .having(sql`COUNT(${products.id}) > 0`)
+            .orderBy(categories.name);
+
         return NextResponse.json({
             tags,
             brands,
+            categories: categoryResults,
             conditions: conditionsList,
             priceRange: {
                 min: Number(priceRange[0]?.minPrice || 0),
