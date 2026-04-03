@@ -35,7 +35,7 @@ export default function Header({ className = '' }: { className?: string }) {
     const pathname = usePathname();
     const router = useRouter();
     const isHome = pathname === '/';
-    const isShopPage = pathname === '/shop' || pathname.startsWith('/shop/');
+    const isShopPage = pathname === '/shop' || pathname?.startsWith('/shop/');
 
     const navRef = useRef<HTMLDivElement>(null);
     const { items } = useCart();
@@ -82,6 +82,8 @@ export default function Header({ className = '' }: { className?: string }) {
 
     // Header transparency logic - Disabled per user request for solid colored header
     const isTransparent = false;
+    const [isMounted, setIsMounted] = useState(false);
+    useEffect(() => setIsMounted(true), []);
 
     return (
         <header className={clsx(
@@ -224,7 +226,7 @@ export default function Header({ className = '' }: { className?: string }) {
 
                             <Link href="/cart" className="relative hover:text-[#265795] transition text-black">
                                 <ShoppingCart className="h-6 w-6" />
-                                {cartItemCount > 0 && (
+                                {isMounted && cartItemCount > 0 && (
                                     <span className="absolute -top-2 -right-2 bg-brand-yellow text-brand-blue text-xs font-bold rounded-full h-5 w-5 flex items-center justify-center">
                                         {cartItemCount}
                                     </span>
