@@ -4,7 +4,7 @@ import { useState, useEffect, useMemo } from 'react';
 import { useRouter } from 'next/navigation';
 import {
     Save, ArrowLeft, Search, CheckCircle2,
-    AlertCircle, Plus, Trash2, ChevronDown, ChevronUp
+    AlertCircle, Plus, Trash2, ChevronDown, ChevronUp, Loader2
 } from 'lucide-react';
 import Link from 'next/link';
 import clsx from 'clsx';
@@ -18,6 +18,7 @@ interface ServiceEditorProps {
 export default function ServiceEditor({ initialData, isEditing = false }: ServiceEditorProps) {
     const router = useRouter();
     const [saving, setSaving] = useState(false);
+    const [uploading, setUploading] = useState(false);
 
     const [formData, setFormData] = useState({
         title: '',
@@ -301,16 +302,27 @@ export default function ServiceEditor({ initialData, isEditing = false }: Servic
                                 </div>
                             ) : (
                                 <div className="flex gap-3 items-end">
-                                    <label className="flex flex-col items-center justify-center w-40 h-40 border-2 border-dashed border-gray-300 rounded-xl cursor-pointer hover:border-blue-400 hover:bg-blue-50/30 transition">
-                                        <Plus size={24} className="text-gray-400 mb-1" />
-                                        <span className="text-xs text-gray-400">Upload Image</span>
+                                    <label className={`flex flex-col items-center justify-center w-40 h-40 border-2 border-dashed rounded-xl transition ${uploading ? 'border-blue-400 bg-blue-50/30 cursor-wait' : 'border-gray-300 cursor-pointer hover:border-blue-400 hover:bg-blue-50/30'}`}>
+                                        {uploading ? (
+                                            <>
+                                                <Loader2 size={24} className="text-blue-500 mb-1 animate-spin" />
+                                                <span className="text-xs text-blue-500 font-medium">Uploading...</span>
+                                            </>
+                                        ) : (
+                                            <>
+                                                <Plus size={24} className="text-gray-400 mb-1" />
+                                                <span className="text-xs text-gray-400">Upload Image</span>
+                                            </>
+                                        )}
                                         <input
                                             type="file"
                                             accept="image/*"
                                             className="hidden"
+                                            disabled={uploading}
                                             onChange={async (e) => {
                                                 const file = e.target.files?.[0];
                                                 if (!file) return;
+                                                setUploading(true);
                                                 const fd = new FormData();
                                                 fd.append('file', file);
                                                 fd.append('folder', 'services');
@@ -318,9 +330,17 @@ export default function ServiceEditor({ initialData, isEditing = false }: Servic
                                                     const res = await fetch('/api/admin/upload', { method: 'POST', body: fd });
                                                     if (res.ok) {
                                                         const data = await res.json();
-                                                        setFormData(prev => ({ ...prev, heroImage: data.url }));
+                                                        setFormData(prev => ({ ...prev, heroImage: data.imageUrl }));
+                                                    } else {
+                                                        const errData = await res.json().catch(() => ({}));
+                                                        alert(errData.error || 'Upload failed. Please try again.');
                                                     }
-                                                } catch (err) { console.error('Upload failed', err); }
+                                                } catch (err) {
+                                                    console.error('Upload failed', err);
+                                                    alert('Upload failed. Please check your connection and try again.');
+                                                } finally {
+                                                    setUploading(false);
+                                                }
                                             }}
                                         />
                                     </label>
